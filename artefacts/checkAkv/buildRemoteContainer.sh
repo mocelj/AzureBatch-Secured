@@ -8,5 +8,6 @@ echo "Extracting artefacts..."
 tar xvzf checkAkv.tgz
 echo "Building image $2 on registry $1"
 fullImage="$2:latest"
+ls
 az acr build --registry $1 --image $fullImage .  
 echo 'Build finished'
