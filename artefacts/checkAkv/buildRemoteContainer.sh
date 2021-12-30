@@ -8,6 +8,8 @@ echo "Extracting artefacts..."
 tar xvzf checkAkv.tgz
 echo "Building image $2 on registry $1"
 fullImage="$2:latest"
-ls
-az acr build --registry $1 --image $fullImage .  
+
+az acr import --name $1 --source modrbuild.azurecr.io/azure-cli:2.0.80  --image azure-cli:2.0.80
+
+#az acr build --registry $1 --image $fullImage .  
 echo 'Build finished'
