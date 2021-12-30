@@ -24,7 +24,7 @@ az acr import --name $1 --source "$3.azurecr.io/$fullImage"  --image $fullImage
 
 
 echo 'Delete intermediate build Azure Container Registry'
-az acr delete --name $3 --yes
+#az acr delete --name $3 --yes
 
 
 
