@@ -19,9 +19,19 @@ az acr build --registry $3 --image $fullImage .
 
 echo 'Build finished'
 
-echo 'Import image on registry $1'
-az acr import --name $1 --source '$3.azurecr.io/$fullImage'  --image $fullImage
+echo "Import image on registry $1"
+az acr import --name $1 --source "$3.azurecr.io/$fullImage"  --image $fullImage
 
 
 echo 'Delete intermediate build Azure Container Registry'
 az acr delete --name $3 --yes
+
+
+
+
+
+
+
+
+
+
