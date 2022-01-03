@@ -5,31 +5,41 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "1520464948814542593"
+      "templateHash": "14489485465022924451"
     }
   },
   "parameters": {
-    "firstDeployment": {
-      "type": "bool",
-      "defaultValue": false
-    },
-    "ignoreDnsZoneNwLinks": {
-      "type": "bool",
-      "defaultValue": false
-    },
     "resourceGroupLocation": {
       "type": "string",
       "defaultValue": "westeurope"
-    },
-    "prefix": {
-      "type": "string",
-      "defaultValue": "[uniqueString(subscription().id)]",
-      "maxLength": 13
     },
     "environment": {
       "type": "string",
       "defaultValue": "dev",
       "maxLength": 3
+    },
+    "prefix": {
+      "type": "string",
+      "defaultValue": "[uniqueString(parameters('environment'), subscription().id)]",
+      "maxLength": 13
+    },
+    "deployHubSpoke": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Indicate if Hub-Spoke Network should be deployed."
+      }
+    },
+    "deploySecureBatch": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Indicate if Azure Batch Demo should be deployed."
+      }
+    },
+    "ignoreDnsZoneNwLinks": {
+      "type": "bool",
+      "defaultValue": false
     },
     "resourceTags": {
       "type": "object",
@@ -56,10 +66,6 @@
       "type": "string",
       "defaultValue": "Standard_D4_v5"
     },
-    "batchNodeSku": {
-      "type": "string",
-      "defaultValue": "STANDARD_D2S_V3"
-    },
     "batchServiceObjectId": {
       "type": "string",
       "metadata": {
@@ -68,7 +74,14 @@
     },
     "assignBatchServiceRoles": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Select true if Batch Service has not been gratned contributor permissions."
+      }
+    },
+    "batchNodeSku": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_V3"
     },
     "deployJumpboxWindowsAddOns": {
       "type": "bool",
@@ -1102,7 +1115,7 @@
       ]
     },
     {
-      "condition": "[parameters('firstDeployment')]",
+      "condition": "[parameters('deployHubSpoke')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
       "name": "deployHubSpokeNetwork",
@@ -3819,6 +3832,7 @@
       ]
     },
     {
+      "condition": "[parameters('deploySecureBatch')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
       "name": "deployDemoAzureBatchSecured",

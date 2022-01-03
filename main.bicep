@@ -13,8 +13,6 @@ targetScope = 'subscription'
 
 // Global Parameters
 //-------------------------------------------------------
-param firstDeployment bool = false
-param ignoreDnsZoneNwLinks bool = false
 
 param resourceGroupLocation string = 'westeurope'
 
@@ -23,6 +21,14 @@ param environment string = 'dev'
 
 @maxLength(13)
 param prefix string = uniqueString(environment,subscription().id)
+
+@description('Indicate if Hub-Spoke Network should be deployed.')
+param deployHubSpoke bool = true
+
+@description('Indicate if Azure Batch Demo should be deployed.')
+param deploySecureBatch bool = true
+
+param ignoreDnsZoneNwLinks bool = false
 
 param resourceTags object = {
   WorkloadName : 'Back Office Risk'
@@ -41,12 +47,13 @@ param jumpboxLinuxVmSize string = 'Standard_B1s'
 
 param jumpboxWindowsVmSize string = 'Standard_D4_v5'
 
-param batchNodeSku  string = 'STANDARD_D2S_V3'
-
-
 @description('Get the Batch Service Object Id: az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv')
 param batchServiceObjectId string
+
+@description('Select true if Batch Service has not been gratned contributor permissions.')
 param assignBatchServiceRoles bool = false
+
+param batchNodeSku  string = 'Standard_D2s_V3'
 
 // Hub Spoke Parameters
 //-------------------------------------------------------
@@ -1004,7 +1011,7 @@ module logAnalyticsWorkspace './modules/logAnalytics/logAnalytics.bicep' = {
 
 //--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion, Jumpbox) -----------------
 
-module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (firstDeployment) {
+module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deployHubSpoke) {
   scope: subscription()
   name: 'deployHubSpokeNetwork'
   params: {
@@ -1039,7 +1046,7 @@ module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (firstD
 //---------------------------  Deploy the Azure Batch Demo to Spoke 01---------------------------------------------------------
 
 
-module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured.bicep' = {
+module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured.bicep' = if (deploySecureBatch) {
   scope: resourceGroup(rgAzureBatch)
   name: 'deployDemoAzureBatchSecured'
   params: {

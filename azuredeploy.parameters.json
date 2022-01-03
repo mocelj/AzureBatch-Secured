@@ -2,17 +2,20 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "firstDeployment": {
-      "value": true
-    },
-    "ignoreDnsZoneNwLinks": {
-      "value": false
-    },
     "resourceGroupLocation": {
       "value": "westeurope"
     },
     "environment": {
       "value": "dev"
+    },
+    "deployHubSpoke": {
+      "value": true
+    },
+    "deploySecureBatch": {
+      "value": true
+    },
+    "ignoreDnsZoneNwLinks": {
+      "value": false
     },
     "resourceTags": {
       "value": {
@@ -23,17 +26,20 @@
         "CostCenter": "Internal"
       }
     },
+    "adminUserName": {
+      "value": "localadmin"
+    },
     "jumpboxLinuxVmSize": {
       "value": "Standard_B1s"
     },
     "jumpboxWindowsVmSize": {
       "value": "Standard_D4_v5"
     },
-    "batchNodeSku": {
-      "value": "STANDARD_D2S_V3"
-    },
     "assignBatchServiceRoles": {
-      "value": true
+      "value": false
+    },
+    "batchNodeSku": {
+      "value": "Standard_D2s_V3"
     },
     "deployJumpboxWindowsAddOns": {
       "value": true
