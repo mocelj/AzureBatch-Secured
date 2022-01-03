@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "firstDeployment": {
+      "value": true
+    },
+    "ignoreDnsZoneNwLinks": {
+      "value": false
+    },
+    "resourceGroupLocation": {
+      "value": "westeurope"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "resourceTags": {
+      "value": {
+        "WorkloadName": "Back Office Risk",
+        "BusinessUnit": "Risk Managment",
+        "Owner": "Darko Mocelj",
+        "Environment": "[parameters('environment')]",
+        "CostCenter": "Internal"
+      }
+    },
+    "jumpboxLinuxVmSize": {
+      "value": "Standard_B1s"
+    },
+    "jumpboxWindowsVmSize": {
+      "value": "Standard_D4_v5"
+    },
+    "batchNodeSku": {
+      "value": "STANDARD_D2S_V3"
+    },
+    "assignBatchServiceRoles": {
+      "value": true
+    },
+    "deployJumpboxWindowsAddOns": {
+      "value": true
+    },
+    "vmExtensionWindowsJumpboxUri": {
+      "value": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/azure-batch-secured-jumpbox-setup.ps1"
+    },
+    "acrPublicNetworkAccess": {
+      "value": "Disabled"
+    },
+    "acrSku": {
+      "value": "Premium"
+    },
+    "acrAdminUserEnabled": {
+      "value": true
+    },
+    "deployPrivateACR": {
+      "value": true
+    },
+    "primaryScriptBuildKvTestImage": {
+      "value": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/checkAkv/buildRemoteContainer.sh"
+    }
+  }
+}

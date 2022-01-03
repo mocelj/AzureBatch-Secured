@@ -1,0 +1,32 @@
+
+--- Batch Secured
+
+deploy one pool 
+Test
+add app insights start tasks
+
+clean-up paraters / vars
+create arm deployment files
+
+--- 
+
+Feature 1: 
+
+- add nfs to pool
+- 
+
+
+
+
+
+
+
+--- NX example 
+
+0. Key Vault
+1. Storage Account (NFS)
+2. Cosmos DB / Mongo API   <- new https://docs.microsoft.com/en-us/azure/cosmos-db/mongodb/manage-with-bicep
+3. SQL Server <- new https://docs.microsoft.com/en-us/azure/azure-sql/database/single-database-create-arm-template-quickstart
+4. VM - Head Node (custom extension)
+5. VM - Compute Nodes (custom extension)
+6. Evtl. Deployment Script (for licence, SQL Server bacpac import)
