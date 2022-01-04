@@ -216,7 +216,9 @@ module deployBatchDemoACR '../../../modules/containerRegistry/acr.bicep' = {
     tags: tags
     roleAssignments: acrRoleAssignments
   }
-  dependsOn: []
+  dependsOn: [
+    azBatchManagedIdentity
+  ]
 }
 
 
@@ -270,7 +272,9 @@ module assignRGContributorRoleMI '../../../modules/azRoles/roleAssignmentResourc
     builtInRoleType: 'Contributor'
     principalId: azBatchManagedIdentity.properties.principalId
   }
-  dependsOn: []
+  dependsOn: [
+    azBatchManagedIdentity
+  ]
 }
 
 module deployCheckKVImage '../../../modules/deploymentScripts/deploymentScript-MI-ACR.bicep'  = {
