@@ -40,9 +40,6 @@ param batchAccountName string
 
 param batchNodeSku string
 
-// To-do: Can we run a deployment script and query the batchObject ID? Take this as an output?
-//
-
 //------------------------------------------------------------------------
 //  This Demo will deploy an Azure Batch account with 3 pools in a secured
 //  environment.
@@ -50,8 +47,8 @@ param batchNodeSku string
 //    https://docs.microsoft.com/en-us/azure/batch/batch-account-create-portal#additional-configuration-for-user-subscription-mode
 //  - Managed Identity (will be assigned to the pool)
 //  - AKV 
-//  - ACR
 //  - Storage account(s)
+//  - ACR
 //  - Grant the Batch API Service permissions to the pre-provisioned Key Vaults
 //  - Grant the managed Identity ACR Push and Storage Account permissions (to avoid configuration of sa keys)
 //  - Batch Account
@@ -104,15 +101,14 @@ resource azBatchManagedIdentity  'Microsoft.ManagedIdentity/userAssignedIdentiti
 // Create a key vault to store secrets and connections strings
 //------------------------------------------------------------------------
 
-// TO-DO: check if connections strings are required, or if everything could be handled
-// by the managed identity
-
 module deployAzBatchKV '../../../modules/azureKeyVault/azureKeyVault.bicep' = {
   name: 'deployAzBatchKV'
   params: {
     keyVaultName: kvName
     privateEndpointSubnetId: privateEndpointSubnetId
     deployPrivateKeyVault: deployPrivateAKV
+    enablePurgeProtection: false
+    enableSoftDelete: true
     rgDNSZone: rgHub 
     tags: tags
   }
@@ -166,62 +162,6 @@ module kvPolicyManagedIdentity '../../../modules/azureKeyVault/azureKeyVaultAddA
   ]
 }
 
-// Create the Azure Container Registry
-//------------------------------------------------------------------------
-
-// Create a 'build' ACR to build the containers, outside of the locked down vNet
-// Import the built containers to the batch ACR through Azure Trusted Servcies enabled
-// delete the temp 'build' ACR in the external build script
-
-var acrBuildName = 'tempacrbuild'
-module deployBatchDemoBuildACR '../../../modules/containerRegistry/acr.bicep' = {
-  name: 'deployBuildACR'
-
-  params: {
-    name: acrBuildName
-  }
-
-}
-
-var acrPrivateEndpoints_tmp  = [
-  {
-    name: '${acrName}-pl' 
-    subnetResourceId: privateEndpointSubnetId
-    service: 'registry'
-    privateDnsZoneResourceIds: [ 
-      refDNSzone.id
-    ]
-  }
-]
-
-var acrPrivateEndpoints = deployPrivateACR ? acrPrivateEndpoints_tmp : []
-
-var acrRoleAssignments = [
-  {
-    roleDefinitionIdOrName: 'AcrPush'
-    principalIds: [
-      azBatchManagedIdentity.properties.principalId
-    ]
-  }
-]
-
-module deployBatchDemoACR '../../../modules/containerRegistry/acr.bicep' = {
-  name: 'deployBatchACR'
-  params: {
-    name: acrName
-    acrAdminUserEnabled: acrAdminUserEnabled
-    privateEndpoints: acrPrivateEndpoints
-    acrSku: acrSku
-    publicNetworkAccess: acrPublicNetworkAccess
-    tags: tags
-    roleAssignments: acrRoleAssignments
-  }
-  dependsOn: [
-    azBatchManagedIdentity
-  ]
-}
-
-
 // Create required storage accounts
 //------------------------------------------------------------------------
 
@@ -258,6 +198,61 @@ module assignStorageAccountRole '../../../modules/storage/roleAssignmentStorage.
   ]
 }]
 
+// Create the Azure Container Registry
+//------------------------------------------------------------------------
+
+// Create a 'build' ACR to build the containers, outside of the locked down vNet
+// Import the built containers to the batch ACR through Azure Trusted Servcies enabled
+// delete the temp 'build' ACR in the external build script
+
+var acrBuildName = 'tempacrbuild'
+module deployBatchDemoBuildACR '../../../modules/containerRegistry/acr.bicep' = {
+  name: 'deployBuildACR'
+
+  params: {
+    name: acrBuildName
+  }
+
+}
+
+var acrPrivateEndpoints_tmp  = [
+  {
+    name: '${acrName}-pl' 
+    subnetResourceId: privateEndpointSubnetId
+    service: 'registry'
+    privateDnsZoneResourceIds: [ 
+      refDNSzone.id
+    ]
+  }
+]
+
+var acrPrivateEndpoints = deployPrivateACR ? acrPrivateEndpoints_tmp : []
+
+var acrRoleAssignments = [
+  {
+    roleDefinitionIdOrName: 'AcrPush'
+    principalIds: [
+      azBatchManagedIdentity.properties.principalId
+    ]
+    principalType: 'ServicePrincipal'
+  }
+]
+
+module deployBatchDemoACR '../../../modules/containerRegistry/acr.bicep' = {
+  name: 'deployBatchACR'
+  params: {
+    name: acrName
+    acrAdminUserEnabled: acrAdminUserEnabled
+    privateEndpoints: acrPrivateEndpoints
+    acrSku: acrSku
+    publicNetworkAccess: acrPublicNetworkAccess
+    tags: tags
+    roleAssignments: acrRoleAssignments
+  }
+  dependsOn: [
+    deployBatchDemoBuildACR
+  ]
+}
 
 // Deploy a test image to the ACR
 //------------------------------------------------------------------------
@@ -271,10 +266,9 @@ module assignRGContributorRoleMI '../../../modules/azRoles/roleAssignmentResourc
   params: {
     builtInRoleType: 'Contributor'
     principalId: azBatchManagedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
-  dependsOn: [
-    azBatchManagedIdentity
-  ]
+  dependsOn: []
 }
 
 module deployCheckKVImage '../../../modules/deploymentScripts/deploymentScript-MI-ACR.bicep'  = {

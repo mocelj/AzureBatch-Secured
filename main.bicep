@@ -17,7 +17,7 @@ targetScope = 'subscription'
 param resourceGroupLocation string = 'westeurope'
 
 @maxLength(3)
-param environment string = 'dev'
+param environment string = 'd01'
 
 @maxLength(13)
 param prefix string = uniqueString(environment,subscription().id)
@@ -30,10 +30,13 @@ param deploySecureBatch bool = true
 
 param ignoreDnsZoneNwLinks bool = false
 
+param utcShort string = utcNow('d')
+
 param resourceTags object = {
   WorkloadName : 'Back Office Risk'
   BusinessUnit : 'Risk Managment'
   Owner: 'Darko Mocelj'
+  LastDeployed : utcShort 
   Environment: environment
   CostCenter: 'Internal'
 }
@@ -41,14 +44,14 @@ param resourceTags object = {
 param adminUserName string = 'localadmin'
 
 @secure()
-param adminPassword string
+param adminPassword string 
 
 param jumpboxLinuxVmSize string = 'Standard_B1s'
 
 param jumpboxWindowsVmSize string = 'Standard_D4_v5'
 
 @description('Get the Batch Service Object Id: az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv')
-param batchServiceObjectId string
+param batchServiceObjectId string 
 
 @description('Select true if Batch Service has not been gratned contributor permissions.')
 param assignBatchServiceRoles bool = false

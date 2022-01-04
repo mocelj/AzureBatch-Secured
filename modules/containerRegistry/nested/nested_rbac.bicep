@@ -2,6 +2,14 @@ param principalIds array
 param roleDefinitionIdOrName string
 param resourceId string
 
+@allowed([
+  'User'
+  'ServicePrincipal'
+  'ForeignGroup'
+  'Group'
+])
+param principalType string
+
 var builtInRoleNames = {
   'Owner': subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')
   'Contributor': subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
@@ -36,6 +44,7 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-prev
   properties: {
     roleDefinitionId: contains(builtInRoleNames, roleDefinitionIdOrName) ? builtInRoleNames[roleDefinitionIdOrName] : roleDefinitionIdOrName
     principalId: principalId
+    principalType: principalType
   }
   scope: registry
 }]

@@ -186,6 +186,7 @@ module registry_rbac './nested/nested_rbac.bicep' = [for (roleAssignment, index)
   params: {
     principalIds: roleAssignment.principalIds
     roleDefinitionIdOrName: roleAssignment.roleDefinitionIdOrName
+    principalType: roleAssignment.principalType
     resourceId: registry.id
   }
 }]

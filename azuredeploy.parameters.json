@@ -6,7 +6,7 @@
       "value": "westeurope"
     },
     "environment": {
-      "value": "dev"
+      "value": "d01"
     },
     "deployHubSpoke": {
       "value": true
@@ -17,11 +17,15 @@
     "ignoreDnsZoneNwLinks": {
       "value": false
     },
+    "utcShort": {
+      "value": "[utcNow('d')]"
+    },
     "resourceTags": {
       "value": {
         "WorkloadName": "Back Office Risk",
         "BusinessUnit": "Risk Managment",
         "Owner": "Darko Mocelj",
+        "LastDeployed": "[parameters('utcShort')]",
         "Environment": "[parameters('environment')]",
         "CostCenter": "Internal"
       }
