@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "4399138510958283264"
+      "templateHash": "4171472161701144657"
     }
   },
   "parameters": {
@@ -3916,7 +3916,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "5225859658941855910"
+              "templateHash": "5990639321170234981"
             }
           },
           "parameters": {
@@ -4259,7 +4259,7 @@
                     "value": "[parameters('deployPrivateAKV')]"
                   },
                   "enablePurgeProtection": {
-                    "value": false
+                    "value": true
                   },
                   "enableSoftDelete": {
                     "value": true

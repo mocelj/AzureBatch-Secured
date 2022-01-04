@@ -107,7 +107,7 @@ module deployAzBatchKV '../../../modules/azureKeyVault/azureKeyVault.bicep' = {
     keyVaultName: kvName
     privateEndpointSubnetId: privateEndpointSubnetId
     deployPrivateKeyVault: deployPrivateAKV
-    enablePurgeProtection: false
+    enablePurgeProtection: true
     enableSoftDelete: true
     rgDNSZone: rgHub 
     tags: tags
