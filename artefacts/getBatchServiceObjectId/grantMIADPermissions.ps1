@@ -33,8 +33,10 @@ New-AzureAdServiceAppRoleAssignment -ObjectId $MSI.ObjectId -PrincipalId $MSI.Ob
 
 # Second, get the ObjectId fo the Azure Batch Service Pricipal
 
+Start-Sleep -Seconds 10
+
 $output = (Get-AzADServicePrincipal -ServicePrincipalName MicrosoftAzureBatch).Id
 
 Write-Output $output
-$DeploymentScriptOutputs = @{}
-$DeploymentScriptOutputs[\'text\'] = $output
+#$DeploymentScriptOutputs = @{}
+#$DeploymentScriptOutputs[\'text\'] = $output
