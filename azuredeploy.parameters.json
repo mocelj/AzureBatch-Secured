@@ -6,16 +6,22 @@
       "value": "westeurope"
     },
     "environment": {
-      "value": "d01"
+      "value": "007"
     },
     "deployHubSpoke": {
       "value": true
     },
-    "deploySecureBatch": {
+    "deployJumpBoxVMs": {
       "value": true
     },
     "ignoreDnsZoneNwLinks": {
       "value": false
+    },
+    "deployVPNGw": {
+      "value": false
+    },
+    "deploySecureBatch": {
+      "value": true
     },
     "utcShort": {
       "value": "[utcNow('d')]"
@@ -25,9 +31,9 @@
         "WorkloadName": "Back Office Risk",
         "BusinessUnit": "Risk Managment",
         "Owner": "Darko Mocelj",
-        "LastDeployed": "[parameters('utcShort')]",
         "Environment": "[parameters('environment')]",
-        "CostCenter": "Internal"
+        "CostCenter": "Internal",
+        "LastDeployed": "[parameters('utcShort')]"
       }
     },
     "adminUserName": {
@@ -49,7 +55,7 @@
       "value": true
     },
     "vmExtensionWindowsJumpboxUri": {
-      "value": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/azure-batch-secured-jumpbox-setup.ps1"
+      "value": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/VM-Extensions-Windows/azure-batch-secured-jumpbox-setup.ps1"
     },
     "acrPublicNetworkAccess": {
       "value": "Disabled"

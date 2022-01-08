@@ -100,10 +100,10 @@ param environment string = '007'
 param prefix string = uniqueString(environment,subscription().id,environment,resourceGroupLocation)
 
 @description('Indicate if Hub-Spoke Network should be deployed.')
-param deployHubSpoke bool = false
+param deployHubSpoke bool = true
 
 @description('Indicate if a Linux and Windows Jumpbox should be deployed.')
-param deployJumpBoxVMs bool = false
+param deployJumpBoxVMs bool = true
 
 param ignoreDnsZoneNwLinks bool = false
 
@@ -1160,7 +1160,7 @@ module logAnalyticsWorkspace './modules/logAnalytics/logAnalytics.bicep' = {
   ]
 }
 
-//--------------------------- Deploy Log Analytics Workspace -------------------------------------------------------------- 
+//--------------------------- Deploy Application Insights  -------------------------------------------------------------- 
 
 var appInsightsName = 'appi-${environment}-${prefix}-${uniqueString(subscription().subscriptionId,('rg-${prefix}-vnet-hub-01'))}'
 
