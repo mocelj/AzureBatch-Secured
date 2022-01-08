@@ -2,7 +2,7 @@
 Purpose : Main Deployment File
 Author  : Darko Mocelj
 Date    : 25.11.2021
-Update  : 03.01.2022
+Update  : 08.01.2022
 Comments: Still work in progress...
 */
 
@@ -13,22 +13,105 @@ targetScope = 'subscription'
 
 // Global Parameters
 //-------------------------------------------------------
-
+@description('Resource Group deployment region')
+// To-Be-Confirmed which regions support Batch-Accounts with no-public IPs
+@allowed( [
+  'eastus'
+  'eastus2'
+  // 'southcentralus'
+  // 'westus2'
+  // 'westus3'
+  // 'australiaeast'
+  // 'southeastasia'
+  // 'northeurope'
+  // 'swedencentral'
+  // 'uksouth'
+   'westeurope'
+  // 'centralus'
+  // 'northcentralus'
+  // 'westus'
+  // 'southafricanorth'
+  // 'centralindia'
+  // 'eastasia'
+  // 'japaneast'
+  // 'jioindiawest'
+  // 'koreacentral'
+  // 'canadacentral'
+  // 'francecentral'
+  // 'germanywestcentral'
+  // 'norwayeast'
+  // 'switzerlandnorth'
+  // 'uaenorth'
+  // 'brazilsouth'
+  // 'centralusstage'
+  // 'eastusstage'
+  // 'eastus2stage'
+  // 'northcentralusstage'
+  // 'southcentralusstage'
+  // 'westusstage'
+  // 'westus2stage'
+  // 'asia'
+  // 'asiapacific'
+  // 'australia'
+  // 'brazil'
+  // 'canada'
+  // 'europe'
+  // 'france'
+  // 'germany'
+  // 'global'
+  // 'india'
+  // 'japan'
+  // 'korea'
+  // 'norway'
+  // 'southafrica'
+  // 'switzerland'
+  // 'uae'
+  // 'uk'
+  // 'unitedstates'
+  // 'eastasiastage'
+  // 'southeastasiastage'
+  // 'centraluseuap'
+  // 'eastus2euap'
+  // 'westcentralus'
+  // 'southafricawest'
+  // 'australiacentral'
+  // 'australiacentral2'
+  // 'australiasoutheast'
+  // 'japanwest'
+  // 'jioindiacentral'
+  // 'koreasouth'
+  // 'southindia'
+  // 'westindia'
+  // 'canadaeast'
+  // 'francesouth'
+  // 'germanynorth'
+  // 'norwaywest'
+  // 'switzerlandwest'
+  // 'ukwest'
+  // 'uaecentral'
+  // 'brazilsoutheast'
+])
 param resourceGroupLocation string = 'westeurope'
 
 @maxLength(3)
-param environment string = 'd01'
+param environment string = '007'
 
 @maxLength(13)
-param prefix string = uniqueString(environment,subscription().id)
+param prefix string = uniqueString(environment,subscription().id,environment,resourceGroupLocation)
 
 @description('Indicate if Hub-Spoke Network should be deployed.')
-param deployHubSpoke bool = true
+param deployHubSpoke bool = false
+
+@description('Indicate if a Linux and Windows Jumpbox should be deployed.')
+param deployJumpBoxVMs bool = false
+
+param ignoreDnsZoneNwLinks bool = false
+
+@description('Indicate if a VPN Gateway should be deployed. Note: deployment may take up to 45 min addtional time. Certificate has to be added after creation.')
+param deployVPNGw bool = false
 
 @description('Indicate if Azure Batch Demo should be deployed.')
 param deploySecureBatch bool = true
-
-param ignoreDnsZoneNwLinks bool = false
 
 param utcShort string = utcNow('d')
 
@@ -36,9 +119,9 @@ param resourceTags object = {
   WorkloadName : 'Back Office Risk'
   BusinessUnit : 'Risk Managment'
   Owner: 'Darko Mocelj'
-  LastDeployed : utcShort 
   Environment: environment
   CostCenter: 'Internal'
+  LastDeployed: utcShort
 }
 
 param adminUserName string = 'localadmin'
@@ -46,8 +129,17 @@ param adminUserName string = 'localadmin'
 @secure()
 param adminPassword string 
 
+@allowed([
+  'Standard_B1s'
+  'Standard_B2ms'
+])
 param jumpboxLinuxVmSize string = 'Standard_B1s'
 
+@allowed([
+  'Standard_B2ms'
+  'Standard_B4ms'
+  'Standard_D4_v5'
+])
 param jumpboxWindowsVmSize string = 'Standard_D4_v5'
 
 @description('Get the Batch Service Object Id: az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv')
@@ -56,6 +148,14 @@ param batchServiceObjectId string
 @description('Select true if Batch Service has not been gratned contributor permissions.')
 param assignBatchServiceRoles bool = false
 
+@allowed([ 
+  'Standard_D2s_V3'
+  'Standard_D2s_V4'
+  'Standard_D2s_V5'
+  'Standard_F2s_v2'
+  'Standard_F4s_v2'
+  'Standard_F8s_v2'
+]) 
 param batchNodeSku  string = 'Standard_D2s_V3'
 
 // Hub Spoke Parameters
@@ -463,30 +563,23 @@ var vNetSpoke02Param  = {
 
 var fwNetworkRuleCollections  = [
   {
-    name: 'nrcInternetAllow'
+    name: 'nrcIntraSpokeConnectivity'
     properties: {
-        priority: 100
+        priority: 110
         action: {
             type: 'Allow'
         }
         rules: [
             {
-                name: 'AllowInternet'
+                name: 'Spoke01-to-Spoke02'
                 protocols: [
                     'Any'
                 ]
                 sourceAddresses: [
-                  vNetHubObject.subnets[3].SubnetAddressSpace
-                  vNetSpoke01Param.subnets[0].SubnetAddressSpace
-                  vNetSpoke01Param.subnets[1].SubnetAddressSpace
-                  vNetSpoke01Param.subnets[2].SubnetAddressSpace
-                  vNetSpoke02Param.subnets[0].SubnetAddressSpace
-                  vNetSpoke02Param.subnets[1].SubnetAddressSpace
-                  vNetSpoke02Param.subnets[2].SubnetAddressSpace
-                  
+                  vNetSpoke01Param.vNetAddressSpace
                 ]
                 destinationAddresses: [
-                    '*'
+                  vNetSpoke02Param.vNetAddressSpace
                 ]
                 sourceIpGroups: []
                 destinationIpGroups: []
@@ -495,6 +588,60 @@ var fwNetworkRuleCollections  = [
                     '*'
                 ]
             }
+            {
+              name: 'Spoke02-to-Spoke01'
+              protocols: [
+                  'Any'
+              ]
+              sourceAddresses: [
+                vNetSpoke02Param.vNetAddressSpace
+              ]
+              destinationAddresses: [
+                vNetSpoke01Param.vNetAddressSpace
+              ]
+              sourceIpGroups: []
+              destinationIpGroups: []
+              destinationFqdns: []
+              destinationPorts: [
+                  '*'
+              ]
+          }
+          {
+            name: 'SMTP'
+            protocols: [
+                'Any'
+            ]
+            sourceAddresses: [
+              '*'
+            ]
+            destinationAddresses: [
+              '*'
+            ]
+            sourceIpGroups: []
+            destinationIpGroups: []
+            destinationFqdns: []
+            destinationPorts: [
+                25
+            ]
+          }
+          {
+            name: 'NTP'
+            protocols: [
+                'UDP'
+            ]
+            sourceAddresses: [
+              '*'
+            ]
+            destinationAddresses: [
+              '*'
+            ]
+            sourceIpGroups: []
+            destinationIpGroups: []
+            destinationFqdns: []
+            destinationPorts: [
+                123
+            ]
+          }
         ]
     }
   }
@@ -825,6 +972,7 @@ var vmObjectJumpbox  = {
     computerName: 'LinuxJumpbox'
     adminUserName: adminUserName
     adminPassword: adminPassword
+    customData: loadFileAsBase64('./modules/virtualMachines/cloud-init-jumpbox.txt')
   }
   imageReference: {
     publisher: 'canonical'
@@ -835,7 +983,7 @@ var vmObjectJumpbox  = {
 }
 
 param deployJumpboxWindowsAddOns bool = true
-param vmExtensionWindowsJumpboxUri  string = 'https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/azure-batch-secured-jumpbox-setup.ps1'
+param vmExtensionWindowsJumpboxUri  string = 'https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/VM-Extensions-Windows/azure-batch-secured-jumpbox-setup.ps1'
 
 var vmObjectJumpboxWindows  = {
   nicName: 'nic-jumpbox-windows-'
@@ -988,7 +1136,7 @@ var batchAccountName = 'ba${environment}${prefix}01'
 
 @batchSize(1)
 module rgModule './modules/resourceGroup/resourceGroup.bicep' = [ for resourceGroupName in resourceGroupNames: {
-  name: 'deployRg-${resourceGroupName}'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-Sub-${resourceGroupName}'
   params: {
     resourceGroupLocation: resourceGroupLocation
     resourceGroupName: resourceGroupName
@@ -1002,7 +1150,7 @@ var logAnalyticsWorkspaceName = 'log-${environment}-${prefix}-${uniqueString(sub
 
 module logAnalyticsWorkspace './modules/logAnalytics/logAnalytics.bicep' = {
   scope: resourceGroup(rgHub)
-  name: 'deployLogAnalyticsWorkspace'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-logAnalytics'
   params: {
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
     tags: resourceTags
@@ -1012,30 +1160,39 @@ module logAnalyticsWorkspace './modules/logAnalytics/logAnalytics.bicep' = {
   ]
 }
 
-//--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion, Jumpbox) -----------------
+//--------------------------- Deploy Log Analytics Workspace -------------------------------------------------------------- 
+
+var appInsightsName = 'appi-${environment}-${prefix}-${uniqueString(subscription().subscriptionId,('rg-${prefix}-vnet-hub-01'))}'
+
+module appInsights './modules/appInsights/deploy.bicep' = {
+  scope: resourceGroup(rgHub)
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-appInsights'
+  params: {
+    appInsightsWorkspaceResourceId: logAnalyticsWorkspace.outputs.id
+    name: appInsightsName
+    tags:resourceTags
+  }
+}
+
+//--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion, Jumpbox) -------------
 
 module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deployHubSpoke) {
   scope: subscription()
-  name: 'deployHubSpokeNetwork'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-hubSpoke'
   params: {
     pipBastionName: pipBastionName
     pipFirewallName: pipFirewallName
     rgHub: rgHub
+    rgSpoke01: rgSpoke01
+    rgSpoke02: rgSpoke02
     vNetHubObject: vNetHubObject
+    vNetSpoke01Object: vNetSpoke01Param
+    vNetSpoke02Object: vNetSpoke02Param
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.outputs.id
     azureFirewallName: azureFirewallName
     bastionName: bastionName
     fwNetworkRuleCollections: fwNetworkRuleCollections
     fwApplicationRuleCollections: fwApplicationRuleCollections
-    rgJumpbox: rgJumpbox
-    rgSpoke01: rgSpoke01
-    vNetSpoke01Object: vNetSpoke01Param
-    rgSpoke02: rgSpoke02
-    vNetSpoke02Object: vNetSpoke02Param
-    vmObjectJumpbox: vmObjectJumpbox
-    vmObjectJumpboxWindows: vmObjectJumpboxWindows
-    deployJumpboxWindowsAddOns: deployJumpboxWindowsAddOns
-    vmExtensionWindowsJumpboxUri: vmExtensionWindowsJumpboxUri
     privateDnsZoneNames: privateDnsZoneNames
     ignoreDnsZoneNwLinks: ignoreDnsZoneNwLinks
     tags: resourceTags
@@ -1046,33 +1203,81 @@ module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deploy
   ]
 }
 
-//---------------------------  Deploy the Azure Batch Demo to Spoke 01---------------------------------------------------------
+module hubJumpboxes './modules/virtualMachines/hubJumpboxes.bicep' = if (deployJumpBoxVMs) { 
+  scope: resourceGroup(rgJumpbox)
+  name:  'dpl-${uniqueString(deployment().name,deployment().location)}-jumpbox'
+  params: {
+    vmExtensionWindowsJumpboxUri: vmExtensionWindowsJumpboxUri
+    vmObjectJumpboxWindows: vmObjectJumpboxWindows
+    vmObjectJumpbox: vmObjectJumpbox
+    vNetHubObject: vNetHubObject
+    deployJumpboxWindowsAddOns: deployJumpboxWindowsAddOns
+    rgHub: rgHub
+    tags: resourceTags
+  }
+  dependsOn: [
+    rgModule
+    hubSpokeNetwork
+  ]
+ }
+
+//---------------------------  Deploy the VPN Gateway to the Hub Network --------------------------------------------------
+
+resource vNetHub 'Microsoft.Network/virtualNetworks@2021-05-01' existing = if (deployVPNGw){
+  scope: resourceGroup(rgHub)
+  name: vNetHubObject.vNetName
+}
+
+var vpnGwName = 'vpnGw${environment}${prefix}01'
+var vpnClientAddressPoolPrefix = '172.16.25.0/24'
+
+module deployVPNGwToHub './modules/networking/vpnGateway/deploy.bicep' = if (deployVPNGw) {
+  scope: resourceGroup(rgHub)
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-vpnGw'
+  params: {
+    name: vpnGwName
+    virtualNetworkGatewaySku: 'VpnGw2'
+    virtualNetworkGatewayType: 'Vpn'
+    vNetResourceId: vNetHub.id
+    activeActive: false
+    enableBgp: false
+    vpnType: 'RouteBased'
+    vpnClientAddressPoolPrefix: vpnClientAddressPoolPrefix
+  }
+
+  dependsOn: [
+    hubSpokeNetwork
+  ]
+}
+
+
+//---------------------------  Deploy the Azure Batch Demo to Spoke 01------------------------------------------------------
 
 
 module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured.bicep' = if (deploySecureBatch) {
   scope: resourceGroup(rgAzureBatch)
-  name: 'deployDemoAzureBatchSecured'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-azBatchSecured'
   params: {
-    saDefinitions: saDefinitions
-    vNetObject: vNetSpoke01Param
-    storageAccountIpAllowAccess: hubSpokeNetwork.outputs.fwPublicIpAddress
     rgAzureBatch: rgAzureBatch
     rgHub: rgHub
     rgSpoke: rgSpoke01
+    prefix: prefix
+    environment: environment
+    appInsightsName: appInsightsName
+    vNetObject: vNetSpoke01Param
+    saDefinitions: saDefinitions
+    saNameAzBatch: saNameAzBatch
     acrName: acrName
     acrPublicNetworkAccess: acrPublicNetworkAccess
     acrSku: acrSku
     acrAdminUserEnabled: acrAdminUserEnabled
     deployPrivateACR: deployPrivateACR
     primaryScriptBuildKvTestImage: primaryScriptBuildKvTestImage
-    prefix: prefix
-    environment: environment
-    tags: resourceTags
     batchAccountName: batchAccountName
-    saNameAzBatch: saNameAzBatch
     batchServiceObjectId: batchServiceObjectId
     assignBatchServiceRoles: assignBatchServiceRoles
-    batchNodeSku: batchNodeSku 
+    batchNodeSku: batchNodeSku
+    tags: resourceTags
   }
   dependsOn: [
     hubSpokeNetwork

@@ -1,17 +1,18 @@
 
 param privateEndpointSubnetId string 
-param storageAccountIpAllowAccess string
+param storageAccountIpAllowAccess string = ''
 param tags object = {}
 param rgHub string
 param saDefinitions array
 param kvName string = ''
+param location string = resourceGroup().location
 
 // Create the Storage Accounts for the demo
 // --------------------------------------------------------------------------------------------
 
 
-module stgAzBatchGeneric '../../../modules/storage/storageAccount.bicep' = [ for saDefinition in saDefinitions:  {
-    name: 'deplyStorageAccount-${saDefinition.storageAccountName}'
+module stgAzBatchGeneric '../../../modules/storage/storageAccount.bicep' = [ for (saDefinition,index) in saDefinitions:  {
+    name: 'dpl-${uniqueString(deployment().name,location)}-StorageAccount${index}'
     params: {
       rgHub: rgHub
       storageAccountIpAllowAccess: storageAccountIpAllowAccess
@@ -33,8 +34,8 @@ module stgAzBatchGeneric '../../../modules/storage/storageAccount.bicep' = [ for
     }
   }]
 
-  module stgAddContainer '../../../modules/storage/storageAccountAddContainers.bicep' = [ for saDefinition in saDefinitions: if (contains(saDefinition.privateLinkGroupIds,'blob')) {
-    name: 'deployStorageContainer-${saDefinition.storageAccountName}'
+  module stgAddContainer '../../../modules/storage/storageAccountAddContainers.bicep' = [ for (saDefinition,index) in saDefinitions: if (contains(saDefinition.privateLinkGroupIds,'blob')) {
+    name: 'dpl-${uniqueString(deployment().name,location)}-add-saContainer-${index}'
     params: {
       storageAccountName: saDefinition.storageAccountName
       blobContainers: [
@@ -46,8 +47,8 @@ module stgAzBatchGeneric '../../../modules/storage/storageAccount.bicep' = [ for
     ]
   }]  
 
-  module stgAddFileShare '../../../modules/storage/storageAccountAddFileShare.bicep' = [ for saDefinition in saDefinitions: if (contains(saDefinition.privateLinkGroupIds,'file')) {
-    name: 'deployStorageFileShare-${saDefinition.storageAccountName}'
+  module stgAddFileShare '../../../modules/storage/storageAccountAddFileShare.bicep' = [ for (saDefinition,index) in saDefinitions: if (contains(saDefinition.privateLinkGroupIds,'file')) {
+    name: 'dpl-${uniqueString(deployment().name,location)}-add-FileShare-${index}'
     params: {
       storageAccountName: saDefinition.storageAccountName
       fileShareAccessTier: saDefinition.fileShareAccessTier

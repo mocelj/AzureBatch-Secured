@@ -13,7 +13,6 @@ param vNetObject object
 
 // Storage Accounts
 
-param storageAccountIpAllowAccess string
 param saDefinitions array
 param saNameAzBatch string
 
@@ -29,16 +28,23 @@ param primaryScriptBuildKvTestImage string
 // AKV
 // we are hitting the kv naming convention limit with with name. Be careful if you change it.
 var kvName = 'kv-${environment}-${prefix}-ba'
+
 param deployPrivateAKV bool = true
 
 // Azure Batch
+
 // az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv
 param batchServiceObjectId string
+
 param assignBatchServiceRoles bool
 
 param batchAccountName string
 
 param batchNodeSku string
+
+param appInsightsName string
+
+param location string = resourceGroup().location
 
 //------------------------------------------------------------------------
 //  This Demo will deploy an Azure Batch account with 3 pools in a secured
@@ -60,7 +66,7 @@ param batchNodeSku string
 //------------------------------------------------------------------------
 
 module deployBatchRoleAssignment '../../../modules/azRoles/roleAssignmentSubscription.bicep' = if (assignBatchServiceRoles) {
-  name: 'deployBatchRoleAssignment'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchRoleAssignment'
   params: {
     builtInRoleType: 'Contributor'
     principalId: batchServiceObjectId
@@ -79,12 +85,14 @@ resource refDNSzone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
   scope: resourceGroup(rgHub)
 }
 
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: appInsightsName
+}
 
-var privateEndpointSubnetId = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionEndpointSubnet].subnetName}'
-
-var batchPoolSubnetId_Linux = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionLinuxSubnet].subnetName}'
+var privateEndpointSubnetId      = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionEndpointSubnet].subnetName}'
+var batchPoolSubnetId_Linux      = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionLinuxSubnet].subnetName}'
 var batchPoolSubnetId_LinuxNoSsh = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionLinuxNoSshSubnet].subnetName}'
-var batchPoolSubnetId_Windows = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionWindowsSubnet].subnetName}'
+var batchPoolSubnetId_Windows    = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionWindowsSubnet].subnetName}'
 
 
 // Create a managed identity which will be added to the batch pool
@@ -102,7 +110,7 @@ resource azBatchManagedIdentity  'Microsoft.ManagedIdentity/userAssignedIdentiti
 //------------------------------------------------------------------------
 
 module deployAzBatchKV '../../../modules/azureKeyVault/azureKeyVault.bicep' = {
-  name: 'deployAzBatchKV'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchKeyVault'
   params: {
     keyVaultName: kvName
     privateEndpointSubnetId: privateEndpointSubnetId
@@ -151,7 +159,7 @@ var kvAccessPolicyMI = [
 // Allow the MI to access the KV
 
 module kvPolicyManagedIdentity '../../../modules/azureKeyVault/azureKeyVaultAddAccessPolicy.bicep' = {
-  name: 'kvPolicyManagedIdentiy-add'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchKV-Policy-MI-add'
   params: {
     accessPolicy: array(kvAccessPolicyMI)
     accessPolicyAction: 'add'
@@ -166,13 +174,12 @@ module kvPolicyManagedIdentity '../../../modules/azureKeyVault/azureKeyVaultAddA
 //------------------------------------------------------------------------
 
 module deployBatchDemoStorageAccounts '../../../modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured-Storage.bicep' = {
-  name: 'deployBatchDemoStorageAccounts'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchStorageAccounts'
   params: {
     rgHub: rgHub
     kvName: kvName
     privateEndpointSubnetId: privateEndpointSubnetId
     saDefinitions: saDefinitions 
-    storageAccountIpAllowAccess: storageAccountIpAllowAccess
     tags: tags
   }
   scope: resourceGroup(rgAzureBatch)
@@ -186,8 +193,8 @@ module deployBatchDemoStorageAccounts '../../../modules/Demos/Demo-Batch-Secured
 // Storage Blob Data Reader is minium role for MI
 
 
-module assignStorageAccountRole '../../../modules/storage/roleAssignmentStorage.bicep' = [ for saDefinition in saDefinitions: {
-  name: 'deployStorageRoleMI-${saDefinition.storageAccountName}'
+module assignStorageAccountRole '../../../modules/storage/roleAssignmentStorage.bicep' = [ for (saDefinition,index) in saDefinitions: {
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchStorageRoleAssignment-${index}'
   params: {
     builtInRoleType: 'StorageBlobDataContributor'
     principalId: azBatchManagedIdentity.properties.principalId
@@ -207,12 +214,10 @@ module assignStorageAccountRole '../../../modules/storage/roleAssignmentStorage.
 
 var acrBuildName = 'tempacrbuild'
 module deployBatchDemoBuildACR '../../../modules/containerRegistry/acr.bicep' = {
-  name: 'deployBuildACR'
-
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchBuildAcr'
   params: {
     name: acrBuildName
   }
-
 }
 
 var acrPrivateEndpoints_tmp  = [
@@ -239,7 +244,7 @@ var acrRoleAssignments = [
 ]
 
 module deployBatchDemoACR '../../../modules/containerRegistry/acr.bicep' = {
-  name: 'deployBatchACR'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchAcr'
   params: {
     name: acrName
     acrAdminUserEnabled: acrAdminUserEnabled
@@ -262,7 +267,7 @@ var acrImageName = 'kvsecretsmi'
 // assign contributor permissons on RG level to be able to create the temp ACI / ACR for script deployment
 
 module assignRGContributorRoleMI '../../../modules/azRoles/roleAssignmentResourceGroup.bicep' = {
-  name: 'deployAssignRGContributorRoleMI'
+  name: 'dpl-${uniqueString(deployment().name,location)}-RG-Contrib-MI'
   params: {
     builtInRoleType: 'Contributor'
     principalId: azBatchManagedIdentity.properties.principalId
@@ -272,7 +277,7 @@ module assignRGContributorRoleMI '../../../modules/azRoles/roleAssignmentResourc
 }
 
 module deployCheckKVImage '../../../modules/deploymentScripts/deploymentScript-MI-ACR.bicep'  = {
-  name: 'deployCheckKVImage'
+  name: 'dpl-${uniqueString(deployment().name,location)}-Check-KV-Image'
   params: {
     acrBuildName: acrBuildName
     acrName: acrName
@@ -287,27 +292,11 @@ module deployCheckKVImage '../../../modules/deploymentScripts/deploymentScript-M
   ]
 }
 
-
-// // module getAzureBatchObjectId '../../../modules/deploymentScripts/deploymentScript-Query-BatchService-ObjectId.bicep' = {
-// //   name: 'getAzureBatchObjectId'
-// //   params: {
-// //     managedIdentityName: batchManagedIdentity
-// //     tags: tags
-// //   }
-// //   dependsOn: [
-// //     azBatchManagedIdentity
-// //   ]
-// // }
-
-// //output scriptLogs string = getAzureBatchObjectId.outputs.scriptLogs
-
-
-
 // Create the Azure Batch account
 //------------------------------------------------------------------------
 
 module deployAzureBatchAccount '../../../modules/azBatch/azBatchAccount-MI.bicep' = {
-  name: 'deployAzureBatchAccount'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchAccount'
   params: {
     batchAccountName: batchAccountName
     batchKeyVault: kvName
@@ -432,11 +421,26 @@ var batchPoolObjects  = [
     }
   
     scaleSettings: {
-      fixedScale: {
-        targetDedicatedNodes: 0
-        targetLowPriorityNodes: 0
-        resizeTimeout: 'PT15M'
+    
+    
+      //fixedScale: {
+      //  targetDedicatedNodes: 0
+      //  targetLowPriorityNodes: 0
+      //  resizeTimeout: 'PT15M'
+      //}
+    
+      autoScale: {
+        evaluationInterval: 'PT5M'
+        formula: '''
+        startingNumberOfVMs = 0;
+        maxNumberofVMs = 2;
+        pendingTaskSamplePercent = $PendingTasks.GetSamplePercent(180 * TimeInterval_Second);
+        pendingTaskSamples = pendingTaskSamplePercent < 70 ? startingNumberOfVMs : avg($PendingTasks.GetSample(180 *   TimeInterval_Second));
+        $TargetDedicatedNodes=min(maxNumberofVMs, pendingTaskSamples);
+        $NodeDeallocationOption=taskcompletion 
+        '''
       }
+      
     }
   
     interNodeCommunication: 'Disabled'
@@ -508,7 +512,7 @@ var batchPoolObjects  = [
 
 @batchSize(1)
 module deployBatchPool '../../../modules/azBatch/azBatchPool.bicep' = [ for batchPoolObject in batchPoolObjects:  {
-  name: 'deployBatchPool-${batchPoolObject.poolName}'
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchPool-${batchPoolObject.poolName}'
   params: {
     batchAccountName: batchAccountName
     batchManagedIdentity: batchManagedIdentity

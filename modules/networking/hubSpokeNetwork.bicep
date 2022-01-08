@@ -18,11 +18,6 @@ param fwNetworkRuleCollections array = []
 param fwApplicationRuleCollections array = []
 param azureFirewallName string 
 param bastionName string 
-param rgJumpbox string
-param vmObjectJumpbox object
-param vmObjectJumpboxWindows object
-param deployJumpboxWindowsAddOns bool = true
-param vmExtensionWindowsJumpboxUri  string
 
 // Spoke01
 
@@ -44,7 +39,7 @@ param ignoreDnsZoneNwLinks bool = false
 // Deploy the Hub Network 
 
 module deployHubVnet '../../modules/networking/hubNetwork.bicep' = {
-  name: 'deployHubVnet'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-vnet-hub'
   scope: resourceGroup(rgHub)
   params: {
     vNetHubObject: vNetHubObject
@@ -56,11 +51,6 @@ module deployHubVnet '../../modules/networking/hubNetwork.bicep' = {
     azureFirewallName: azureFirewallName
     bastionName: bastionName
     rgHub: rgHub
-    rgJumpbox: rgJumpbox
-    vmObjectJumpbox: vmObjectJumpbox
-    vmObjectJumpboxWindows: vmObjectJumpboxWindows
-    deployJumpboxWindowsAddOns: deployJumpboxWindowsAddOns
-    vmExtensionWindowsJumpboxUri: vmExtensionWindowsJumpboxUri
     tags: tags
   }
 }
@@ -72,7 +62,7 @@ output fwPublicIpAddress string = deployHubVnet.outputs.fwPublicIpAddress
 
 module deploySpoke1Vnet '../../modules/networking/spokeNetwork.bicep' = {
   scope: resourceGroup(rgSpoke01)
-  name: 'deploySpoke1Vnet'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-vnet-spoke-1'
   params: {
     fwRouteNextHopIpAddress: deployHubVnet.outputs.fwPrivateIpAddress
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
@@ -89,7 +79,7 @@ module deploySpoke1Vnet '../../modules/networking/spokeNetwork.bicep' = {
 
 module deploySpoke2Vnet '../../modules/networking/spokeNetwork.bicep' = {
   scope: resourceGroup(rgSpoke02)
-  name: 'deploySpoke2Vnet'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-vnet-spoke-2'
   params: {
     fwRouteNextHopIpAddress: deployHubVnet.outputs.fwPrivateIpAddress
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
@@ -105,7 +95,7 @@ module deploySpoke2Vnet '../../modules/networking/spokeNetwork.bicep' = {
 // Create the network peerings
 
 module peerHubToSpoke01 '../../modules/networking/vNet/vNetPeering.bicep' = {
-  name: 'deployHubToSpoke01Peering'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-peering-hub-spoke01'
   params: {
     vnetSourceName: deployHubVnet.outputs.vNetName
     peeringName: '${deployHubVnet.outputs.vNetName}-to-${deploySpoke1Vnet.outputs.vNetName}'
@@ -119,7 +109,7 @@ module peerHubToSpoke01 '../../modules/networking/vNet/vNetPeering.bicep' = {
 }
 
 module peerSpoke01ToHub '../../modules/networking/vNet/vNetPeering.bicep' = {
-  name: 'deploySpoke01ToHubPeering'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-peering-spoke01-hub'
   params: {
     vnetSourceName: deploySpoke1Vnet.outputs.vNetName
     peeringName: '${deploySpoke1Vnet.outputs.vNetName}-to-${deployHubVnet.outputs.vNetName}'
@@ -133,7 +123,7 @@ module peerSpoke01ToHub '../../modules/networking/vNet/vNetPeering.bicep' = {
 }
 
 module peerHubToSpoke02 '../../modules/networking/vNet/vNetPeering.bicep' = {
-  name: 'deployHubToSpoke02Peering'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-peering-hub-spoke02'
   params: {
     vnetSourceName: deployHubVnet.outputs.vNetName
     peeringName: '${deployHubVnet.outputs.vNetName}-to-${deploySpoke2Vnet.outputs.vNetName}'
@@ -147,7 +137,7 @@ module peerHubToSpoke02 '../../modules/networking/vNet/vNetPeering.bicep' = {
 }
 
 module peerSpoke02ToHub '../../modules/networking/vNet/vNetPeering.bicep' = {
-  name: 'deploySpoke02ToHubPeering'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-peering-spoke02-hub'
   params: {
     vnetSourceName: deploySpoke2Vnet.outputs.vNetName
     peeringName: '${deploySpoke2Vnet.outputs.vNetName}-to-${deployHubVnet.outputs.vNetName}'
@@ -164,7 +154,7 @@ module peerSpoke02ToHub '../../modules/networking/vNet/vNetPeering.bicep' = {
 
 module privateDnsZones '../../modules/networking/dnsZones/privateDnsZone.bicep' = [for dnsZoneName in privateDnsZoneNames: if (!ignoreDnsZoneNwLinks) {
   scope: resourceGroup(rgHub)
-  name: 'deployDNSZone-${dnsZoneName}'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-dnsZone-${dnsZoneName}'
   params: {
     privateDnsZoneName: dnsZoneName
     tags: tags
@@ -194,9 +184,9 @@ var virtualNwLinkNetworks = [
   }
 ]
 
-module privateDnsVirtualNwLink '../../modules/networking/dnsZones/privateDnsZoneVirtualNetworkLink.bicep' = [ for privateDnsZoneName in privateDnsZoneNames: if (!ignoreDnsZoneNwLinks) {
+module privateDnsVirtualNwLink '../../modules/networking/dnsZones/privateDnsZoneVirtualNetworkLink.bicep' = [ for (privateDnsZoneName, index) in privateDnsZoneNames: if (!ignoreDnsZoneNwLinks) {
   scope: resourceGroup(rgHub)
-  name: 'deployDNSZoneNwLink-${privateDnsZoneName}'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-dnsZoneNwL-${index}'
   params: {
     privateDnsZoneName: privateDnsZoneName
     virtualNetworkLinks: virtualNwLinkNetworks

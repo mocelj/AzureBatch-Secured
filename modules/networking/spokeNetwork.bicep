@@ -9,12 +9,12 @@
 
 
 param fwRouteNextHopIpAddress string
-
+param location string = resourceGroup().location
 
 // Create the Hub Network Structure (incl. Subnets) first, since other resources depend on it
 
 module vNet '../../modules/networking/vNet/vNet.bicep' = {
-    name: 'deployvNet'
+    name: 'dpl-${uniqueString(deployment().name,location)}-${vNetObject.vNetName}'
     params: {
       vNetObject: vNetObject
       tags: tags
@@ -42,7 +42,7 @@ var fwRoutes = [
 // Create the Routing Tables
   
 module vNetRT '../../modules/networking/vNet/routetable.bicep' = [ for subnet in vNetObject.subnets: if (subnet.rtToAttach != 'None') {
-  name: 'deployvNetRT-${subnet.subnetName}'
+  name: 'dpl-${uniqueString(deployment().name,location)}-RT-spoke-${subnet.subnetName}'
   params: {
     rtName: subnet.rtToAttach
     routes: empty(fwRoutes) ? subnet.routes : union(subnet.routes,fwRoutes)
@@ -57,7 +57,7 @@ module vNetRT '../../modules/networking/vNet/routetable.bicep' = [ for subnet in
 // Create the NSGs
 
 module vNetNSG '../../modules/networking/vNet/networksecuritygroup.bicep' = [ for subnet in vNetObject.subnets: if (subnet.nsgToAttach != 'None') {
-  name: 'deployvNetNSG-${subnet.subnetName}'
+  name: 'dpl-${uniqueString(deployment().name,location)}-NSG-spoke-${subnet.subnetName}'
   params: {
     nsgName: subnet.nsgToAttach
     secRules: subnet.securityRules
@@ -74,7 +74,7 @@ dependsOn: [
 // Attach the RT and NSG to the subnet
 @batchSize(1)
 module vNetNsgRtAttach '../../modules/networking/vNet/subnet-attach-nsg-rt.bicep' = [ for subnet in vNetObject.subnets: {
-  name: 'deployvNetNsgRtAttach-${subnet.subnetName}'
+  name: 'dpl-${uniqueString(deployment().name,location)}-attach-${subnet.subnetName}'
   params: {
     vnetName: subnet.vNetName
     subnetName: subnet.subnetName
