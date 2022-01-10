@@ -1,4 +1,6 @@
 
+// https://docs.microsoft.com/en-us/azure/templates/microsoft.batch/batchaccounts/pools?tabs=bicep
+
 param batchAccountName string
 param batchManagedIdentity string
 param batchPoolObject object
@@ -35,5 +37,6 @@ resource batchAccountPool 'Microsoft.Batch/batchAccounts/pools@2021-06-01' = {
     scaleSettings: batchPoolObject.scaleSettings
     interNodeCommunication: batchPoolObject.interNodeCommunication
     networkConfiguration: batchPoolObject.networkConfiguration
+    startTask: contains(batchPoolObject,'startTask') ? batchPoolObject.startTask : ''
   }  
 }

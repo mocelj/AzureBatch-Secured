@@ -2,7 +2,7 @@
 Purpose : Main Deployment File
 Author  : Darko Mocelj
 Date    : 25.11.2021
-Update  : 08.01.2022
+Update  : 10.01.2022
 Comments: Still work in progress...
 */
 
@@ -94,10 +94,10 @@ targetScope = 'subscription'
 param resourceGroupLocation string = 'westeurope'
 
 @maxLength(3)
-param environment string = '007'
+param environment string = 'dev'
 
 @maxLength(13)
-param prefix string = uniqueString(environment,subscription().id,environment,resourceGroupLocation)
+param prefix string = uniqueString(environment,subscription().id,resourceGroupLocation)
 
 @description('Indicate if Hub-Spoke Network should be deployed.')
 param deployHubSpoke bool = true
@@ -146,7 +146,7 @@ param jumpboxWindowsVmSize string = 'Standard_D4_v5'
 param batchServiceObjectId string 
 
 @description('Select true if Batch Service has not been gratned contributor permissions.')
-param assignBatchServiceRoles bool = false
+param assignBatchServiceRoles bool = true
 
 @allowed([ 
   'Standard_D2s_V3'
@@ -1253,7 +1253,16 @@ module deployVPNGwToHub './modules/networking/vpnGateway/deploy.bicep' = if (dep
 
 //---------------------------  Deploy the Azure Batch Demo to Spoke 01------------------------------------------------------
 
+// appInsights parameters can't be referenced in batch-pool for loop via reference object. Pass the values instead directly
+// Reference objects, since I did not want to pass the keys in the output section
+// To-Do: retrieve values from KV
 
+resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
+  scope: resourceGroup(rgHub)
+  name: appInsightsName
+}
+var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
+var appInsightsAppId = appInsightsRef.properties.ApplicationId
 module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured.bicep' = if (deploySecureBatch) {
   scope: resourceGroup(rgAzureBatch)
   name: 'dpl-${uniqueString(deployment().name,deployment().location)}-azBatchSecured'
@@ -1263,7 +1272,8 @@ module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzure
     rgSpoke: rgSpoke01
     prefix: prefix
     environment: environment
-    appInsightsName: appInsightsName
+    appInsightsInstrumentKey: appInsightsInstrumentKey
+    appInsightsAppId: appInsightsAppId
     vNetObject: vNetSpoke01Param
     saDefinitions: saDefinitions
     saNameAzBatch: saNameAzBatch

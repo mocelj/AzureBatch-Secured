@@ -42,7 +42,8 @@ param batchAccountName string
 
 param batchNodeSku string
 
-param appInsightsName string
+param appInsightsInstrumentKey string
+param appInsightsAppId string
 
 param location string = resourceGroup().location
 
@@ -83,10 +84,6 @@ resource refVNetSpoke 'Microsoft.Network/virtualNetworks@2021-03-01' existing = 
 resource refDNSzone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
   name:  'privatelink${az.environment().suffixes.acrLoginServer}'
   scope: resourceGroup(rgHub)
-}
-
-resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: appInsightsName
 }
 
 var privateEndpointSubnetId      = '${refVNetSpoke.id}/subnets/${vNetObject.subnets[vNetObject.positionEndpointSubnet].subnetName}'
@@ -374,7 +371,33 @@ var batchPoolObjects  = [
         resizeTimeout: 'PT15M'
       }
     }
-  
+
+    startTask: {
+      commandLine: '/bin/bash -c \'wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-linux.sh | bash\''
+      environmentSettings: [
+          {
+              name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
+              value: appInsightsInstrumentKey
+          }
+          {
+              name: 'APP_INSIGHTS_APP_ID'
+              value: appInsightsAppId
+          }
+          {
+              name: 'BATCH_INSIGHTS_DOWNLOAD_URL'
+              value: 'https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights'
+          }
+      ]
+      maxTaskRetryCount: 1
+      userIdentity: {
+          autoUser: {
+              elevationLevel: 'Admin'
+              scope: 'Pool'
+          }
+      }
+       waitForSuccess: true
+    }
+
     interNodeCommunication: 'Disabled'
     networkConfiguration: {
       subnetId: batchPoolSubnetId_Linux
@@ -442,6 +465,32 @@ var batchPoolObjects  = [
       }
       
     }
+
+    startTask: {
+      commandLine: '/bin/bash -c \'wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-linux.sh | bash\''
+      environmentSettings: [
+        {
+          name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
+          value: appInsightsInstrumentKey
+        }
+        {
+          name: 'APP_INSIGHTS_APP_ID'
+          value: appInsightsAppId
+        }
+        {
+          name: 'BATCH_INSIGHTS_DOWNLOAD_URL'
+          value: 'https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights'
+        }
+      ]
+      maxTaskRetryCount: 1
+      userIdentity: {
+        autoUser: {
+          elevationLevel: 'Admin'
+          scope: 'Pool'
+        }
+      }
+      waitForSuccess: true
+    }
   
     interNodeCommunication: 'Disabled'
     networkConfiguration: {
@@ -463,7 +512,7 @@ var batchPoolObjects  = [
         imageReference: {
           publisher: 'microsoftwindowsserver'
           offer: 'windowsserver'
-          sku: '2019-datacenter-core-with-containers-smalldisk'
+          sku: 'datacenter-core-20h2-with-containers-smalldisk-gs'
           version: 'latest'
         }
       
@@ -475,9 +524,7 @@ var batchPoolObjects  = [
 
         containerConfiguration: {
           type: 'DockerCompatible'
-          containerImageNames: [
-            preloadContainerImage
-          ]
+          containerImageNames: []
         
           containerRegistries: [
             {
@@ -500,6 +547,32 @@ var batchPoolObjects  = [
       }
     }
   
+    startTask: {
+      commandLine: 'cmd /c @"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString(\'https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-windows.ps1\'))"'
+      environmentSettings: [
+        {
+          name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
+          value: appInsightsInstrumentKey
+        }
+        {
+          name: 'APP_INSIGHTS_APP_ID'
+          value: appInsightsAppId
+        }
+        {
+          name: 'BATCH_INSIGHTS_DOWNLOAD_URL'
+          value: 'https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights.exe'
+        }
+      ]
+      maxTaskRetryCount: 1
+      userIdentity: {
+        autoUser: {
+          elevationLevel: 'Admin'
+          scope: 'Pool'
+        }
+      }
+      waitForSuccess: true
+    }
+
     interNodeCommunication: 'Disabled'
     networkConfiguration: {
       subnetId: batchPoolSubnetId_Windows
