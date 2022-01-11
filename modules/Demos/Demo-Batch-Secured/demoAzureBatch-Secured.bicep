@@ -512,7 +512,8 @@ var batchPoolObjects  = [
         imageReference: {
           publisher: 'microsoftwindowsserver'
           offer: 'windowsserver'
-          sku: 'datacenter-core-20h2-with-containers-smalldisk-gs'
+          sku: '2022-datacenter-smalldisk'
+          //sku: 'datacenter-core-20h2-with-containers-smalldisk-gs'
           version: 'latest'
         }
       
@@ -522,19 +523,19 @@ var batchPoolObjects  = [
           enableAutomaticUpdates: true
         }
 
-        containerConfiguration: {
-          type: 'DockerCompatible'
-          containerImageNames: []
+        // containerConfiguration: {
+        //   type: 'DockerCompatible'
+        //   containerImageNames: []
         
-          containerRegistries: [
-            {
-              identityReference: {
-                resourceId: azBatchManagedIdentity.id
-              }
-              registryServer: containerRegistryServer
-            }  
-          ]
-        }
+        //   containerRegistries: [
+        //     {
+        //       identityReference: {
+        //         resourceId: azBatchManagedIdentity.id
+        //       }
+        //       registryServer: containerRegistryServer
+        //     }  
+        //   ]
+        // }
 
       }
     }
@@ -548,7 +549,13 @@ var batchPoolObjects  = [
     }
   
     startTask: {
-      commandLine: 'cmd /c @"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString(\'https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-windows.ps1\'))"'
+      commandLine: 'cmd /c @"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString(\'https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-windows.ps1\'))" & python-3.10.1-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0'
+      resourceFiles: [
+        {
+          httpUrl: 'https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/Python/python-3.10.1-amd64.exe'
+          filePath: 'python-3.10.1-amd64.exe'
+        }
+      ]
       environmentSettings: [
         {
           name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
