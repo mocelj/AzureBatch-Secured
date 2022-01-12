@@ -1174,6 +1174,9 @@ module appInsights './modules/appInsights/deploy.bicep' = {
     name: appInsightsName
     tags:resourceTags
   }
+  dependsOn: [
+    rgModule
+  ]
 }
 
 //--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion) -----------------------
