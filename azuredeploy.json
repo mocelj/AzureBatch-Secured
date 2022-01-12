@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "16007424230466257255"
+      "templateHash": "15254787557515888059"
     }
   },
   "parameters": {
@@ -4568,11 +4568,8 @@
           "environment": {
             "value": "[parameters('environment')]"
           },
-          "appInsightsInstrumentKey": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey]"
-          },
-          "appInsightsAppId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ApplicationId]"
+          "appInsightsName": {
+            "value": "[variables('appInsightsName')]"
           },
           "vNetObject": {
             "value": "[variables('vNetSpoke01Param')]"
@@ -4630,7 +4627,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "1154332100114709289"
+              "templateHash": "3017451465574647971"
             }
           },
           "parameters": {
@@ -4702,15 +4699,12 @@
             "batchNodeSku": {
               "type": "string"
             },
-            "appInsightsInstrumentKey": {
-              "type": "string"
-            },
-            "appInsightsAppId": {
-              "type": "string"
-            },
             "location": {
               "type": "string",
               "defaultValue": "[resourceGroup().location]"
+            },
+            "appInsightsName": {
+              "type": "string"
             }
           },
           "functions": [],
@@ -7488,10 +7482,10 @@
                     "value": "[variables('acrImageName')]"
                   },
                   "appInsightsInstrumentKey": {
-                    "value": "[parameters('appInsightsInstrumentKey')]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').InstrumentationKey]"
                   },
                   "appInsightsAppId": {
-                    "value": "[parameters('appInsightsAppId')]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02').ApplicationId]"
                   },
                   "batchPoolSubnetId_Linux": {
                     "value": "[variables('batchPoolSubnetId_Linux')]"
@@ -7898,6 +7892,7 @@
         }
       },
       "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-appInsights', uniqueString(deployment().name, deployment().location)))]",
         "[subscriptionResourceId('Microsoft.Resources/deployments', format('dpl-{0}-hubSpoke', uniqueString(deployment().name, deployment().location)))]"
       ]
     },

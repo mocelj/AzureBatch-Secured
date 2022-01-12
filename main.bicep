@@ -1246,12 +1246,12 @@ module deployVPNGwToHub './modules/networking/vpnGateway/deploy.bicep' = if (dep
 // Reference objects, since I did not want to pass the keys in the output section
 // To-Do: retrieve values from KV
 
-resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
-  scope: resourceGroup(rgHub)
-  name: appInsightsName
-}
-var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
-var appInsightsAppId = appInsightsRef.properties.ApplicationId
+// resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
+//   scope: resourceGroup(rgHub)
+//   name: appInsightsName
+// }
+// var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
+// var appInsightsAppId = appInsightsRef.properties.ApplicationId
 module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured.bicep' = if (deploySecureBatch) {
   scope: resourceGroup(rgAzureBatch)
   name: 'dpl-${uniqueString(deployment().name,deployment().location)}-azBatchSecured'
@@ -1261,8 +1261,9 @@ module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzure
     rgSpoke: rgSpoke01
     prefix: prefix
     environment: environment
-    appInsightsInstrumentKey: appInsightsInstrumentKey
-    appInsightsAppId: appInsightsAppId
+    //appInsightsInstrumentKey: appInsightsInstrumentKey
+    //appInsightsAppId: appInsightsAppId
+    appInsightsName: appInsightsName
     vNetObject: vNetSpoke01Param
     saDefinitions: saDefinitions
     saNameAzBatch: saNameAzBatch
@@ -1282,6 +1283,7 @@ module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzure
   }
   dependsOn: [
     hubSpokeNetwork
+    appInsights
   ]
 }
 

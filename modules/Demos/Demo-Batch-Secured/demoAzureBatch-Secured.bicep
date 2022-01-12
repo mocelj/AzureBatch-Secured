@@ -44,10 +44,12 @@ param batchAccountName string
 
 param batchNodeSku string
 
-param appInsightsInstrumentKey string
-param appInsightsAppId string
+//param appInsightsInstrumentKey string
+//param appInsightsAppId string
 
 param location string = resourceGroup().location
+
+param appInsightsName string 
 
 //------------------------------------------------------------------------
 //  This Demo will deploy an Azure Batch account with 3 pools in a secured
@@ -63,6 +65,13 @@ param location string = resourceGroup().location
 //  - Batch Account
 //  - Pools
 //------------------------------------------------------------------------
+
+resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
+  scope: resourceGroup(rgHub)
+  name: appInsightsName
+}
+var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
+var appInsightsAppId = appInsightsRef.properties.ApplicationId
 
 
 // Generic References used in the deployment script
