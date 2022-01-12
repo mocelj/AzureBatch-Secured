@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "14005335553211418054"
+      "templateHash": "16007424230466257255"
     }
   },
   "parameters": {
@@ -1483,7 +1483,8 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location)))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location)))]",
+        "rgModule"
       ]
     },
     {
