@@ -15,6 +15,8 @@ param vNetObject object
 
 param saDefinitions array
 param saNameAzBatch string
+param saNameStorageSMB string
+param saNameStorageNFS string
 
 // ACR
 
@@ -316,292 +318,36 @@ module deployAzureBatchAccount '../../../modules/azBatch/azBatchAccount-MI.bicep
 // Create the Azure Batch Pools
 //------------------------------------------------------------------------
 
-var preloadContainerImage = '${acrName}.azurecr.io/${acrImageName}:latest'
-var containerRegistryServer = '${acrName}.azurecr.io'
 
 // Connect to ACR through MI
 // Connect to AKV through MI
 // Deploy Linux Pool in allowed-to-log-in mode
 // Deploy Linux Pool in not-allowed-log-in mode (handled by NSG)
 // Deploy Windows Pool in allowed-to-log-in mode
+// Mount NFS Shares on Linux Pools
+// Mount SBM Shares on Windows Pool(s)
 
 
-var batchPoolObjects  = [
-  {
-    poolName: 'linux-dev-pool'
-    vmSize: batchNodeSku
-    taskSlotsPerNode: 2
-    taskSchedulingPolicy: {
-      nodeFillType: 'Pack'
-    }
-    deploymentConfiguration: {
-      virtualMachineConfiguration: {
-        imageReference: {
-          publisher: 'microsoft-azure-batch'
-          offer: 'ubuntu-server-container'
-          sku: '20-04-lts'
-          version: 'latest'
-        }
-      
-        nodeAgentSkuId: 'batch.node.ubuntu 20.04'
-
-        containerConfiguration: {
-          type: 'DockerCompatible'
-          containerImageNames: [
-            preloadContainerImage
-          ]
-        
-          containerRegistries: [
-            {
-              identityReference: {
-                resourceId: azBatchManagedIdentity.id
-              }
-              registryServer: containerRegistryServer
-            }  
-          ]
-        }
-
-      }
-    }
-  
-    scaleSettings: {
-      fixedScale: {
-        targetDedicatedNodes: 0
-        targetLowPriorityNodes: 0
-        resizeTimeout: 'PT15M'
-      }
-    }
-
-    startTask: {
-      commandLine: '/bin/bash -c \'wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-linux.sh | bash\''
-      environmentSettings: [
-          {
-              name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
-              value: appInsightsInstrumentKey
-          }
-          {
-              name: 'APP_INSIGHTS_APP_ID'
-              value: appInsightsAppId
-          }
-          {
-              name: 'BATCH_INSIGHTS_DOWNLOAD_URL'
-              value: 'https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights'
-          }
-      ]
-      maxTaskRetryCount: 1
-      userIdentity: {
-          autoUser: {
-              elevationLevel: 'Admin'
-              scope: 'Pool'
-          }
-      }
-       waitForSuccess: true
-    }
-
-    interNodeCommunication: 'Disabled'
-    networkConfiguration: {
-      subnetId: batchPoolSubnetId_Linux
-      publicIPAddressConfiguration: {
-        provision: 'NoPublicIPAddresses'
-      }
-    }
-  }
-  {
-    poolName: 'linux-prod-pool'
-    vmSize: batchNodeSku
-    taskSlotsPerNode: 2
-    taskSchedulingPolicy: {
-      nodeFillType: 'Pack'
-    }
-    deploymentConfiguration: {
-      virtualMachineConfiguration: {
-        imageReference: {
-          publisher: 'microsoft-azure-batch'
-          offer: 'ubuntu-server-container'
-          sku: '20-04-lts'
-          version: 'latest'
-        }
-      
-        nodeAgentSkuId: 'batch.node.ubuntu 20.04'
-
-        containerConfiguration: {
-          type: 'DockerCompatible'
-          containerImageNames: [
-            preloadContainerImage
-          ]
-        
-          containerRegistries: [
-            {
-              identityReference: {
-                resourceId: azBatchManagedIdentity.id
-              }
-              registryServer: containerRegistryServer
-            }  
-          ]
-        }
-
-      }
-    }
-  
-    scaleSettings: {
-    
-    
-      //fixedScale: {
-      //  targetDedicatedNodes: 0
-      //  targetLowPriorityNodes: 0
-      //  resizeTimeout: 'PT15M'
-      //}
-    
-      autoScale: {
-        evaluationInterval: 'PT5M'
-        formula: '''
-        startingNumberOfVMs = 0;
-        maxNumberofVMs = 2;
-        pendingTaskSamplePercent = $PendingTasks.GetSamplePercent(180 * TimeInterval_Second);
-        pendingTaskSamples = pendingTaskSamplePercent < 70 ? startingNumberOfVMs : avg($PendingTasks.GetSample(180 *   TimeInterval_Second));
-        $TargetDedicatedNodes=min(maxNumberofVMs, pendingTaskSamples);
-        $NodeDeallocationOption=taskcompletion 
-        '''
-      }
-      
-    }
-
-    startTask: {
-      commandLine: '/bin/bash -c \'wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-linux.sh | bash\''
-      environmentSettings: [
-        {
-          name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
-          value: appInsightsInstrumentKey
-        }
-        {
-          name: 'APP_INSIGHTS_APP_ID'
-          value: appInsightsAppId
-        }
-        {
-          name: 'BATCH_INSIGHTS_DOWNLOAD_URL'
-          value: 'https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights'
-        }
-      ]
-      maxTaskRetryCount: 1
-      userIdentity: {
-        autoUser: {
-          elevationLevel: 'Admin'
-          scope: 'Pool'
-        }
-      }
-      waitForSuccess: true
-    }
-  
-    interNodeCommunication: 'Disabled'
-    networkConfiguration: {
-      subnetId: batchPoolSubnetId_LinuxNoSsh
-      publicIPAddressConfiguration: {
-        provision: 'NoPublicIPAddresses'
-      }
-    }
-  }
-  {
-    poolName: 'windows-dev-pool'
-    vmSize: batchNodeSku
-    taskSlotsPerNode: 2
-    taskSchedulingPolicy: {
-      nodeFillType: 'Pack'
-    }
-    deploymentConfiguration: {
-      virtualMachineConfiguration: {
-        imageReference: {
-          publisher: 'microsoftwindowsserver'
-          offer: 'windowsserver'
-          sku: '2022-datacenter-smalldisk'
-          //sku: 'datacenter-core-20h2-with-containers-smalldisk-gs'
-          version: 'latest'
-        }
-      
-        nodeAgentSkuId: 'batch.node.windows amd64'
-
-        windowsConfiguration: {
-          enableAutomaticUpdates: true
-        }
-
-        // containerConfiguration: {
-        //   type: 'DockerCompatible'
-        //   containerImageNames: []
-        
-        //   containerRegistries: [
-        //     {
-        //       identityReference: {
-        //         resourceId: azBatchManagedIdentity.id
-        //       }
-        //       registryServer: containerRegistryServer
-        //     }  
-        //   ]
-        // }
-
-      }
-    }
-  
-    scaleSettings: {
-      fixedScale: {
-        targetDedicatedNodes: 0
-        targetLowPriorityNodes: 0
-        resizeTimeout: 'PT15M'
-      }
-    }
-  
-    startTask: {
-      commandLine: 'cmd /c @"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString(\'https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-windows.ps1\'))" & python-3.10.1-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0'
-      resourceFiles: [
-        {
-          httpUrl: 'https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/Python/python-3.10.1-amd64.exe'
-          filePath: 'python-3.10.1-amd64.exe'
-        }
-      ]
-      environmentSettings: [
-        {
-          name: 'APP_INSIGHTS_INSTRUMENTATION_KEY'
-          value: appInsightsInstrumentKey
-        }
-        {
-          name: 'APP_INSIGHTS_APP_ID'
-          value: appInsightsAppId
-        }
-        {
-          name: 'BATCH_INSIGHTS_DOWNLOAD_URL'
-          value: 'https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights.exe'
-        }
-      ]
-      maxTaskRetryCount: 1
-      userIdentity: {
-        autoUser: {
-          elevationLevel: 'Admin'
-          scope: 'Pool'
-        }
-      }
-      waitForSuccess: true
-    }
-
-    interNodeCommunication: 'Disabled'
-    networkConfiguration: {
-      subnetId: batchPoolSubnetId_Windows
-      publicIPAddressConfiguration: {
-        provision: 'NoPublicIPAddresses'
-      }
-    }
-  }
-]
-
-@batchSize(1)
-module deployBatchPool '../../../modules/azBatch/azBatchPool.bicep' = [ for batchPoolObject in batchPoolObjects:  {
-  name: 'dpl-${uniqueString(deployment().name,location)}-batchPool-${batchPoolObject.poolName}'
+module deployBatchPool '../../../modules/azBatch/azBatchPool.bicep' = {
+  name: 'dpl-${uniqueString(deployment().name,location)}-batchPool-main'
   params: {
     batchAccountName: batchAccountName
     batchManagedIdentity: batchManagedIdentity
-    batchPoolObject: batchPoolObject
+    batchNodeSku: batchNodeSku
+    acrName: acrName
+    acrImageName: acrImageName
+    appInsightsInstrumentKey: appInsightsInstrumentKey
+    appInsightsAppId: appInsightsAppId
+    batchPoolSubnetId_Linux: batchPoolSubnetId_Linux
+    batchPoolSubnetId_LinuxNoSsh: batchPoolSubnetId_LinuxNoSsh
+    batchPoolSubnetId_Windows: batchPoolSubnetId_Windows
+    saNameStorageSMB: saNameStorageSMB
+    saNameStorageNFS: saNameStorageNFS
   }
   dependsOn: [
     deployAzureBatchAccount
   ]
-}]
+}
 
 
 

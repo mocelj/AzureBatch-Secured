@@ -33,6 +33,7 @@ resource vmResource 'Microsoft.Compute/virtualMachines@2019-07-01' = [for i in r
   dependsOn:[
     nicNameVMResource
   ]
+  tags: tags
   properties: {
     hardwareProfile: {
       vmSize: vmObject.vmSize

@@ -2,7 +2,7 @@
 Purpose : Main Deployment File
 Author  : Darko Mocelj
 Date    : 25.11.2021
-Update  : 10.01.2022
+Update  : 12.01.2022
 Comments: Still work in progress...
 */
 
@@ -104,6 +104,9 @@ param deployHubSpoke bool = true
 
 @description('Indicate if a Linux and Windows Jumpbox should be deployed.')
 param deployJumpBoxVMs bool = true
+
+param deployJumpboxWindowsAddOns bool = true
+param vmExtensionWindowsJumpboxUri  string = 'https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/VM-Extensions-Windows/azure-batch-secured-jumpbox-setup.ps1'
 
 param ignoreDnsZoneNwLinks bool = false
 
@@ -964,6 +967,8 @@ var fwApplicationRuleCollections = [
 // VM Configurations (Jumpbox and Test VMs)
 //-------------------------------------------------------
 
+var linuxVmInitScriptRaw = loadTextContent('./modules/virtualMachines/linux-vm-init-script.sh')
+var linuxVmInitScript = format(linuxVmInitScriptRaw,saNameStorageNFS,'container')
 var vmObjectJumpbox  = {
   nicName: 'nic-jumpbox-linux-'
   vmName: 'vm-jumpbox-linux-'
@@ -972,7 +977,7 @@ var vmObjectJumpbox  = {
     computerName: 'LinuxJumpbox'
     adminUserName: adminUserName
     adminPassword: adminPassword
-    customData: loadFileAsBase64('./modules/virtualMachines/cloud-init-jumpbox.txt')
+    customData: base64(linuxVmInitScript)
   }
   imageReference: {
     publisher: 'canonical'
@@ -981,9 +986,6 @@ var vmObjectJumpbox  = {
     version: 'latest'
   }
 }
-
-param deployJumpboxWindowsAddOns bool = true
-param vmExtensionWindowsJumpboxUri  string = 'https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/VM-Extensions-Windows/azure-batch-secured-jumpbox-setup.ps1'
 
 var vmObjectJumpboxWindows  = {
   nicName: 'nic-jumpbox-windows-'
@@ -1174,7 +1176,7 @@ module appInsights './modules/appInsights/deploy.bicep' = {
   }
 }
 
-//--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion, Jumpbox) -------------
+//--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion) -----------------------
 
 module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deployHubSpoke) {
   scope: subscription()
@@ -1203,23 +1205,7 @@ module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deploy
   ]
 }
 
-module hubJumpboxes './modules/virtualMachines/hubJumpboxes.bicep' = if (deployJumpBoxVMs) { 
-  scope: resourceGroup(rgJumpbox)
-  name:  'dpl-${uniqueString(deployment().name,deployment().location)}-jumpbox'
-  params: {
-    vmExtensionWindowsJumpboxUri: vmExtensionWindowsJumpboxUri
-    vmObjectJumpboxWindows: vmObjectJumpboxWindows
-    vmObjectJumpbox: vmObjectJumpbox
-    vNetHubObject: vNetHubObject
-    deployJumpboxWindowsAddOns: deployJumpboxWindowsAddOns
-    rgHub: rgHub
-    tags: resourceTags
-  }
-  dependsOn: [
-    rgModule
-    hubSpokeNetwork
-  ]
- }
+
 
 //---------------------------  Deploy the VPN Gateway to the Hub Network --------------------------------------------------
 
@@ -1287,9 +1273,34 @@ module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzure
     batchServiceObjectId: batchServiceObjectId
     assignBatchServiceRoles: assignBatchServiceRoles
     batchNodeSku: batchNodeSku
+    saNameStorageNFS: saNameStorageNFS
+    saNameStorageSMB: saNameStorageSMB
     tags: resourceTags
   }
   dependsOn: [
     hubSpokeNetwork
   ]
 }
+
+//--------------------------- Deploy Hub Jumpboxes (Windows & Linux) ---------------------------------------------------
+
+// Dependency to Azure Batch Deployment, since the NFS (blob) Share will be mounted to the Linux Jumpbox
+
+module hubJumpboxes './modules/virtualMachines/hubJumpboxes.bicep' = if (deployJumpBoxVMs) { 
+  scope: resourceGroup(rgJumpbox)
+  name:  'dpl-${uniqueString(deployment().name,deployment().location)}-jumpbox'
+  params: {
+    vmExtensionWindowsJumpboxUri: vmExtensionWindowsJumpboxUri
+    vmObjectJumpboxWindows: vmObjectJumpboxWindows
+    vmObjectJumpbox: vmObjectJumpbox
+    vNetHubObject: vNetHubObject
+    deployJumpboxWindowsAddOns: deployJumpboxWindowsAddOns
+    rgHub: rgHub
+    tags: resourceTags
+  }
+  dependsOn: [
+    rgModule
+    hubSpokeNetwork
+    deployDemoAzureBatchSecured
+  ]
+ }

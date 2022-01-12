@@ -4,6 +4,7 @@
 
 param storageAccountName string 
 param rootName string = 'default'
+param fileShareQuota int = 100
 
 
 @allowed([
@@ -24,11 +25,15 @@ param fileShares array = []
 
 // Create a file share if a file share name is provided
 
-resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2021-04-01' =  [for fileShareName in fileShares : {
+resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2021-06-01' =  [for fileShareName in fileShares : {
   name: '${storageAccountName}/${rootName}/${fileShareName}'
   properties: {
     accessTier: fileShareAccessTier
     enabledProtocols: fileShareEnabledProtocol
+    shareQuota: fileShareQuota
+    //rootSquash: 'NoRootSquash'
+    
+
   }
   dependsOn: []
 }]

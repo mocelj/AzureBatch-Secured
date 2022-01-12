@@ -53,6 +53,7 @@ module stgAzBatchGeneric '../../../modules/storage/storageAccount.bicep' = [ for
       storageAccountName: saDefinition.storageAccountName
       fileShareAccessTier: saDefinition.fileShareAccessTier
       fileShareEnabledProtocol: saDefinition.fileShareEnabledProtocol
+      fileShareQuota: contains(saDefinition,'fileShareQuota') ? saDefinition.fileShareQuota: 100 
       fileShares: [
         'share'
       ]

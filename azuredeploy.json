@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "10361719901110528862"
+      "templateHash": "14005335553211418054"
     }
   },
   "parameters": {
@@ -23,12 +23,12 @@
     },
     "environment": {
       "type": "string",
-      "defaultValue": "007",
+      "defaultValue": "dev",
       "maxLength": 3
     },
     "prefix": {
       "type": "string",
-      "defaultValue": "[uniqueString(parameters('environment'), subscription().id, parameters('environment'), parameters('resourceGroupLocation'))]",
+      "defaultValue": "[uniqueString(parameters('environment'), subscription().id, parameters('resourceGroupLocation'))]",
       "maxLength": 13
     },
     "deployHubSpoke": {
@@ -44,6 +44,14 @@
       "metadata": {
         "description": "Indicate if a Linux and Windows Jumpbox should be deployed."
       }
+    },
+    "deployJumpboxWindowsAddOns": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "vmExtensionWindowsJumpboxUri": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/VM-Extensions-Windows/azure-batch-secured-jumpbox-setup.ps1"
     },
     "ignoreDnsZoneNwLinks": {
       "type": "bool",
@@ -110,7 +118,7 @@
     },
     "assignBatchServiceRoles": {
       "type": "bool",
-      "defaultValue": false,
+      "defaultValue": true,
       "metadata": {
         "description": "Select true if Batch Service has not been gratned contributor permissions."
       }
@@ -126,14 +134,6 @@
         "Standard_F4s_v2",
         "Standard_F8s_v2"
       ]
-    },
-    "deployJumpboxWindowsAddOns": {
-      "type": "bool",
-      "defaultValue": true
-    },
-    "vmExtensionWindowsJumpboxUri": {
-      "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/VM-Extensions-Windows/azure-batch-secured-jumpbox-setup.ps1"
     },
     "acrPublicNetworkAccess": {
       "type": "string",
@@ -961,6 +961,8 @@
         }
       }
     ],
+    "linuxVmInitScriptRaw": "#!/bin/sh\n\necho \"Script triggered by cloud-init process\"\n\n\n# Install required packages and ensure installed packages are updated\n\napt update\napt upgrade -y\napt install  azure-cli nfs-common jq -y\n\n# Mount the NFS File Share\n\nmkdir -p /mnt/share\n\nmount -o sec=sys,vers=3,nolock,proto=tcp {0}.blob.core.windows.net:/{0}/{1}  /mnt/share\n\n",
+    "linuxVmInitScript": "[format(variables('linuxVmInitScriptRaw'), variables('saNameStorageNFS'), 'container')]",
     "vmObjectJumpbox": {
       "nicName": "nic-jumpbox-linux-",
       "vmName": "vm-jumpbox-linux-",
@@ -969,7 +971,7 @@
         "computerName": "LinuxJumpbox",
         "adminUserName": "[parameters('adminUserName')]",
         "adminPassword": "[parameters('adminPassword')]",
-        "customData": "I2Nsb3VkLWNvbmZpZwpwYWNrYWdlX3VwZ3JhZGU6IHRydWUKcGFja2FnZXM6CiAgLSBhenVyZS1jbGkKICAtIG5mcy1jb21tb24KICAtIGpx"
+        "customData": "[base64(variables('linuxVmInitScript'))]"
       },
       "imageReference": {
         "publisher": "canonical",
@@ -3828,398 +3830,6 @@
       ]
     },
     {
-      "condition": "[parameters('deployJumpBoxVMs')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
-      "name": "[format('dpl-{0}-jumpbox', uniqueString(deployment().name, deployment().location))]",
-      "resourceGroup": "[variables('rgJumpbox')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "vmExtensionWindowsJumpboxUri": {
-            "value": "[parameters('vmExtensionWindowsJumpboxUri')]"
-          },
-          "vmObjectJumpboxWindows": {
-            "value": "[variables('vmObjectJumpboxWindows')]"
-          },
-          "vmObjectJumpbox": {
-            "value": "[variables('vmObjectJumpbox')]"
-          },
-          "vNetHubObject": {
-            "value": "[variables('vNetHubObject')]"
-          },
-          "deployJumpboxWindowsAddOns": {
-            "value": "[parameters('deployJumpboxWindowsAddOns')]"
-          },
-          "rgHub": {
-            "value": "[variables('rgHub')]"
-          },
-          "tags": {
-            "value": "[parameters('resourceTags')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "9247549572404319464"
-            }
-          },
-          "parameters": {
-            "vNetHubObject": {
-              "type": "object"
-            },
-            "vmObjectJumpbox": {
-              "type": "object"
-            },
-            "vmObjectJumpboxWindows": {
-              "type": "object"
-            },
-            "deployJumpboxWindowsAddOns": {
-              "type": "bool"
-            },
-            "vmExtensionWindowsJumpboxUri": {
-              "type": "string"
-            },
-            "rgHub": {
-              "type": "string"
-            },
-            "tags": {
-              "type": "object",
-              "defaultValue": {}
-            }
-          },
-          "functions": [],
-          "resources": [
-            {
-              "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
-              "name": "deployJumpBoxVM",
-              "properties": {
-                "expressionEvaluationOptions": {
-                  "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                  "subnetId": {
-                    "value": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Network/virtualNetworks', parameters('vNetHubObject').vNetName), parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionJumpBox].subnetName)]"
-                  },
-                  "vmObject": {
-                    "value": "[parameters('vmObjectJumpbox')]"
-                  },
-                  "tags": {
-                    "value": "[parameters('tags')]"
-                  }
-                },
-                "template": {
-                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                  "contentVersion": "1.0.0.0",
-                  "metadata": {
-                    "_generator": {
-                      "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "5189988404852594990"
-                    }
-                  },
-                  "parameters": {
-                    "vmCount": {
-                      "type": "int",
-                      "defaultValue": 1
-                    },
-                    "vmObject": {
-                      "type": "object"
-                    },
-                    "subnetId": {
-                      "type": "string"
-                    },
-                    "tags": {
-                      "type": "object",
-                      "defaultValue": {}
-                    }
-                  },
-                  "functions": [],
-                  "resources": [
-                    {
-                      "copy": {
-                        "name": "nicNameVMResource",
-                        "count": "[length(range(0, parameters('vmCount')))]"
-                      },
-                      "type": "Microsoft.Network/networkInterfaces",
-                      "apiVersion": "2020-05-01",
-                      "name": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
-                      "location": "[resourceGroup().location]",
-                      "tags": "[parameters('tags')]",
-                      "properties": {
-                        "ipConfigurations": [
-                          {
-                            "name": "ipconfig",
-                            "properties": {
-                              "privateIPAllocationMethod": "Dynamic",
-                              "subnet": {
-                                "id": "[parameters('subnetId')]"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "copy": {
-                        "name": "vmResource",
-                        "count": "[length(range(0, parameters('vmCount')))]"
-                      },
-                      "type": "Microsoft.Compute/virtualMachines",
-                      "apiVersion": "2019-07-01",
-                      "name": "[format('{0}{1}', parameters('vmObject').vmName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
-                      "location": "[resourceGroup().location]",
-                      "properties": {
-                        "hardwareProfile": {
-                          "vmSize": "[parameters('vmObject').vmSize]"
-                        },
-                        "osProfile": "[parameters('vmObject').osProfile]",
-                        "storageProfile": {
-                          "imageReference": "[parameters('vmObject').imageReference]",
-                          "osDisk": {
-                            "createOption": "FromImage"
-                          }
-                        },
-                        "networkProfile": {
-                          "networkInterfaces": [
-                            {
-                              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)))]"
-                            }
-                          ]
-                        }
-                      },
-                      "dependsOn": [
-                        "nicNameVMResource"
-                      ]
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
-              "name": "deployJumpBoxWindowsVM",
-              "properties": {
-                "expressionEvaluationOptions": {
-                  "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                  "subnetId": {
-                    "value": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Network/virtualNetworks', parameters('vNetHubObject').vNetName), parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionJumpBox].subnetName)]"
-                  },
-                  "vmObject": {
-                    "value": "[parameters('vmObjectJumpboxWindows')]"
-                  },
-                  "vmCount": {
-                    "value": 1
-                  },
-                  "tags": {
-                    "value": "[parameters('tags')]"
-                  }
-                },
-                "template": {
-                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                  "contentVersion": "1.0.0.0",
-                  "metadata": {
-                    "_generator": {
-                      "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "5189988404852594990"
-                    }
-                  },
-                  "parameters": {
-                    "vmCount": {
-                      "type": "int",
-                      "defaultValue": 1
-                    },
-                    "vmObject": {
-                      "type": "object"
-                    },
-                    "subnetId": {
-                      "type": "string"
-                    },
-                    "tags": {
-                      "type": "object",
-                      "defaultValue": {}
-                    }
-                  },
-                  "functions": [],
-                  "resources": [
-                    {
-                      "copy": {
-                        "name": "nicNameVMResource",
-                        "count": "[length(range(0, parameters('vmCount')))]"
-                      },
-                      "type": "Microsoft.Network/networkInterfaces",
-                      "apiVersion": "2020-05-01",
-                      "name": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
-                      "location": "[resourceGroup().location]",
-                      "tags": "[parameters('tags')]",
-                      "properties": {
-                        "ipConfigurations": [
-                          {
-                            "name": "ipconfig",
-                            "properties": {
-                              "privateIPAllocationMethod": "Dynamic",
-                              "subnet": {
-                                "id": "[parameters('subnetId')]"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "copy": {
-                        "name": "vmResource",
-                        "count": "[length(range(0, parameters('vmCount')))]"
-                      },
-                      "type": "Microsoft.Compute/virtualMachines",
-                      "apiVersion": "2019-07-01",
-                      "name": "[format('{0}{1}', parameters('vmObject').vmName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
-                      "location": "[resourceGroup().location]",
-                      "properties": {
-                        "hardwareProfile": {
-                          "vmSize": "[parameters('vmObject').vmSize]"
-                        },
-                        "osProfile": "[parameters('vmObject').osProfile]",
-                        "storageProfile": {
-                          "imageReference": "[parameters('vmObject').imageReference]",
-                          "osDisk": {
-                            "createOption": "FromImage"
-                          }
-                        },
-                        "networkProfile": {
-                          "networkInterfaces": [
-                            {
-                              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)))]"
-                            }
-                          ]
-                        }
-                      },
-                      "dependsOn": [
-                        "nicNameVMResource"
-                      ]
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "condition": "[parameters('deployJumpboxWindowsAddOns')]",
-              "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
-              "name": "depoyWindowsJumpboxVMExtension",
-              "properties": {
-                "expressionEvaluationOptions": {
-                  "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                  "virtualMachineExtensionCustomScriptUri": {
-                    "value": "[parameters('vmExtensionWindowsJumpboxUri')]"
-                  },
-                  "vmExtensionName": {
-                    "value": "addJumpboxSoftware"
-                  },
-                  "vmName": {
-                    "value": "[format('{0}1', parameters('vmObjectJumpboxWindows').vmName)]"
-                  },
-                  "tags": {
-                    "value": "[parameters('tags')]"
-                  }
-                },
-                "template": {
-                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                  "contentVersion": "1.0.0.0",
-                  "metadata": {
-                    "_generator": {
-                      "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "9986773824395740186"
-                    }
-                  },
-                  "parameters": {
-                    "vmName": {
-                      "type": "string"
-                    },
-                    "vmExtensionName": {
-                      "type": "string"
-                    },
-                    "virtualMachineExtensionCustomScriptUri": {
-                      "type": "string"
-                    },
-                    "tags": {
-                      "type": "object",
-                      "defaultValue": {}
-                    },
-                    "location": {
-                      "type": "string",
-                      "defaultValue": "[resourceGroup().location]"
-                    },
-                    "currentTime": {
-                      "type": "string",
-                      "defaultValue": "[utcNow()]"
-                    }
-                  },
-                  "functions": [],
-                  "variables": {
-                    "virtualMachineExtensionCustomScript": {
-                      "name": "[format('{0}/{1}', parameters('vmName'), parameters('vmExtensionName'))]",
-                      "location": "[parameters('location')]",
-                      "fileUris": [
-                        "[parameters('virtualMachineExtensionCustomScriptUri')]"
-                      ],
-                      "commandToExecute": "[format('powershell -ExecutionPolicy Unrestricted -File ./{0}', last(split(parameters('virtualMachineExtensionCustomScriptUri'), '/')))]"
-                    }
-                  },
-                  "resources": [
-                    {
-                      "type": "Microsoft.Compute/virtualMachines/extensions",
-                      "apiVersion": "2020-06-01",
-                      "name": "[variables('virtualMachineExtensionCustomScript').name]",
-                      "location": "[variables('virtualMachineExtensionCustomScript').location]",
-                      "tags": "[parameters('tags')]",
-                      "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
-                        "typeHandlerVersion": "1.10",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                          "fileUris": "[variables('virtualMachineExtensionCustomScript').fileUris]",
-                          "commandToExecute": "[variables('virtualMachineExtensionCustomScript').commandToExecute]"
-                        },
-                        "protectedSettings": {},
-                        "forceUpdateTag": "[parameters('currentTime')]"
-                      }
-                    }
-                  ]
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'deployJumpBoxWindowsVM')]"
-              ]
-            }
-          ]
-        }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/deployments', format('dpl-{0}-hubSpoke', uniqueString(deployment().name, deployment().location)))]",
-        "rgModule"
-      ]
-    },
-    {
       "condition": "[parameters('deployVPNGw')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
@@ -4957,8 +4567,11 @@
           "environment": {
             "value": "[parameters('environment')]"
           },
-          "appInsightsName": {
-            "value": "[variables('appInsightsName')]"
+          "appInsightsInstrumentKey": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey]"
+          },
+          "appInsightsAppId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ApplicationId]"
           },
           "vNetObject": {
             "value": "[variables('vNetSpoke01Param')]"
@@ -4999,6 +4612,12 @@
           "batchNodeSku": {
             "value": "[parameters('batchNodeSku')]"
           },
+          "saNameStorageNFS": {
+            "value": "[variables('saNameStorageNFS')]"
+          },
+          "saNameStorageSMB": {
+            "value": "[variables('saNameStorageSMB')]"
+          },
           "tags": {
             "value": "[parameters('resourceTags')]"
           }
@@ -5010,7 +4629,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "7292374883093459056"
+              "templateHash": "1154332100114709289"
             }
           },
           "parameters": {
@@ -5040,6 +4659,12 @@
               "type": "array"
             },
             "saNameAzBatch": {
+              "type": "string"
+            },
+            "saNameStorageSMB": {
+              "type": "string"
+            },
+            "saNameStorageNFS": {
               "type": "string"
             },
             "acrName": {
@@ -5076,7 +4701,10 @@
             "batchNodeSku": {
               "type": "string"
             },
-            "appInsightsName": {
+            "appInsightsInstrumentKey": {
+              "type": "string"
+            },
+            "appInsightsAppId": {
               "type": "string"
             },
             "location": {
@@ -5104,154 +4732,7 @@
               }
             ],
             "acrPrivateEndpoints": "[if(parameters('deployPrivateACR'), variables('acrPrivateEndpoints_tmp'), createArray())]",
-            "acrImageName": "kvsecretsmi",
-            "preloadContainerImage": "[format('{0}.azurecr.io/{1}:latest', parameters('acrName'), variables('acrImageName'))]",
-            "containerRegistryServer": "[format('{0}.azurecr.io', parameters('acrName'))]",
-            "batchPoolObjects": [
-              {
-                "poolName": "linux-dev-pool",
-                "vmSize": "[parameters('batchNodeSku')]",
-                "taskSlotsPerNode": 2,
-                "taskSchedulingPolicy": {
-                  "nodeFillType": "Pack"
-                },
-                "deploymentConfiguration": {
-                  "virtualMachineConfiguration": {
-                    "imageReference": {
-                      "publisher": "microsoft-azure-batch",
-                      "offer": "ubuntu-server-container",
-                      "sku": "20-04-lts",
-                      "version": "latest"
-                    },
-                    "nodeAgentSkuId": "batch.node.ubuntu 20.04",
-                    "containerConfiguration": {
-                      "type": "DockerCompatible",
-                      "containerImageNames": [
-                        "[variables('preloadContainerImage')]"
-                      ],
-                      "containerRegistries": [
-                        {
-                          "identityReference": {
-                            "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('batchManagedIdentity'))]"
-                          },
-                          "registryServer": "[variables('containerRegistryServer')]"
-                        }
-                      ]
-                    }
-                  }
-                },
-                "scaleSettings": {
-                  "fixedScale": {
-                    "targetDedicatedNodes": 0,
-                    "targetLowPriorityNodes": 0,
-                    "resizeTimeout": "PT15M"
-                  }
-                },
-                "interNodeCommunication": "Disabled",
-                "networkConfiguration": {
-                  "subnetId": "[variables('batchPoolSubnetId_Linux')]",
-                  "publicIPAddressConfiguration": {
-                    "provision": "NoPublicIPAddresses"
-                  }
-                }
-              },
-              {
-                "poolName": "linux-prod-pool",
-                "vmSize": "[parameters('batchNodeSku')]",
-                "taskSlotsPerNode": 2,
-                "taskSchedulingPolicy": {
-                  "nodeFillType": "Pack"
-                },
-                "deploymentConfiguration": {
-                  "virtualMachineConfiguration": {
-                    "imageReference": {
-                      "publisher": "microsoft-azure-batch",
-                      "offer": "ubuntu-server-container",
-                      "sku": "20-04-lts",
-                      "version": "latest"
-                    },
-                    "nodeAgentSkuId": "batch.node.ubuntu 20.04",
-                    "containerConfiguration": {
-                      "type": "DockerCompatible",
-                      "containerImageNames": [
-                        "[variables('preloadContainerImage')]"
-                      ],
-                      "containerRegistries": [
-                        {
-                          "identityReference": {
-                            "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('batchManagedIdentity'))]"
-                          },
-                          "registryServer": "[variables('containerRegistryServer')]"
-                        }
-                      ]
-                    }
-                  }
-                },
-                "scaleSettings": {
-                  "autoScale": {
-                    "evaluationInterval": "PT5M",
-                    "formula": "        startingNumberOfVMs = 0;\n        maxNumberofVMs = 2;\n        pendingTaskSamplePercent = $PendingTasks.GetSamplePercent(180 * TimeInterval_Second);\n        pendingTaskSamples = pendingTaskSamplePercent < 70 ? startingNumberOfVMs : avg($PendingTasks.GetSample(180 *   TimeInterval_Second));\n        $TargetDedicatedNodes=min(maxNumberofVMs, pendingTaskSamples);\n        $NodeDeallocationOption=taskcompletion \n        "
-                  }
-                },
-                "interNodeCommunication": "Disabled",
-                "networkConfiguration": {
-                  "subnetId": "[variables('batchPoolSubnetId_LinuxNoSsh')]",
-                  "publicIPAddressConfiguration": {
-                    "provision": "NoPublicIPAddresses"
-                  }
-                }
-              },
-              {
-                "poolName": "windows-dev-pool",
-                "vmSize": "[parameters('batchNodeSku')]",
-                "taskSlotsPerNode": 2,
-                "taskSchedulingPolicy": {
-                  "nodeFillType": "Pack"
-                },
-                "deploymentConfiguration": {
-                  "virtualMachineConfiguration": {
-                    "imageReference": {
-                      "publisher": "microsoftwindowsserver",
-                      "offer": "windowsserver",
-                      "sku": "2019-datacenter-core-with-containers-smalldisk",
-                      "version": "latest"
-                    },
-                    "nodeAgentSkuId": "batch.node.windows amd64",
-                    "windowsConfiguration": {
-                      "enableAutomaticUpdates": true
-                    },
-                    "containerConfiguration": {
-                      "type": "DockerCompatible",
-                      "containerImageNames": [
-                        "[variables('preloadContainerImage')]"
-                      ],
-                      "containerRegistries": [
-                        {
-                          "identityReference": {
-                            "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('batchManagedIdentity'))]"
-                          },
-                          "registryServer": "[variables('containerRegistryServer')]"
-                        }
-                      ]
-                    }
-                  }
-                },
-                "scaleSettings": {
-                  "fixedScale": {
-                    "targetDedicatedNodes": 0,
-                    "targetLowPriorityNodes": 0,
-                    "resizeTimeout": "PT15M"
-                  }
-                },
-                "interNodeCommunication": "Disabled",
-                "networkConfiguration": {
-                  "subnetId": "[variables('batchPoolSubnetId_Windows')]",
-                  "publicIPAddressConfiguration": {
-                    "provision": "NoPublicIPAddresses"
-                  }
-                }
-              }
-            ]
+            "acrImageName": "kvsecretsmi"
           },
           "resources": [
             {
@@ -5683,7 +5164,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1008.15138",
-                      "templateHash": "14487238651574350275"
+                      "templateHash": "8288287084665699031"
                     }
                   },
                   "parameters": {
@@ -6127,6 +5608,9 @@
                           "fileShareEnabledProtocol": {
                             "value": "[parameters('saDefinitions')[copyIndex()].fileShareEnabledProtocol]"
                           },
+                          "fileShareQuota": {
+                            "value": "[if(contains(parameters('saDefinitions')[copyIndex()], 'fileShareQuota'), parameters('saDefinitions')[copyIndex()].fileShareQuota, 100)]"
+                          },
                           "fileShares": {
                             "value": [
                               "share"
@@ -6140,7 +5624,7 @@
                             "_generator": {
                               "name": "bicep",
                               "version": "0.4.1008.15138",
-                              "templateHash": "2359724147861147768"
+                              "templateHash": "1469612782383947570"
                             }
                           },
                           "parameters": {
@@ -6150,6 +5634,10 @@
                             "rootName": {
                               "type": "string",
                               "defaultValue": "default"
+                            },
+                            "fileShareQuota": {
+                              "type": "int",
+                              "defaultValue": 100
                             },
                             "fileShareAccessTier": {
                               "type": "string",
@@ -6182,11 +5670,12 @@
                                 "count": "[length(parameters('fileShares'))]"
                               },
                               "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-                              "apiVersion": "2021-04-01",
+                              "apiVersion": "2021-06-01",
                               "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), parameters('rootName'), parameters('fileShares')[copyIndex()])]",
                               "properties": {
                                 "accessTier": "[parameters('fileShareAccessTier')]",
-                                "enabledProtocols": "[parameters('fileShareEnabledProtocol')]"
+                                "enabledProtocols": "[parameters('fileShareEnabledProtocol')]",
+                                "shareQuota": "[parameters('fileShareQuota')]"
                               }
                             }
                           ]
@@ -7973,15 +7462,9 @@
               ]
             },
             {
-              "copy": {
-                "name": "deployBatchPool",
-                "count": "[length(variables('batchPoolObjects'))]",
-                "mode": "serial",
-                "batchSize": 1
-              },
               "type": "Microsoft.Resources/deployments",
               "apiVersion": "2020-06-01",
-              "name": "[format('dpl-{0}-batchPool-{1}', uniqueString(deployment().name, parameters('location')), variables('batchPoolObjects')[copyIndex()].poolName)]",
+              "name": "[format('dpl-{0}-batchPool-main', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
                   "scope": "inner"
@@ -7994,8 +7477,35 @@
                   "batchManagedIdentity": {
                     "value": "[variables('batchManagedIdentity')]"
                   },
-                  "batchPoolObject": {
-                    "value": "[variables('batchPoolObjects')[copyIndex()]]"
+                  "batchNodeSku": {
+                    "value": "[parameters('batchNodeSku')]"
+                  },
+                  "acrName": {
+                    "value": "[parameters('acrName')]"
+                  },
+                  "acrImageName": {
+                    "value": "[variables('acrImageName')]"
+                  },
+                  "appInsightsInstrumentKey": {
+                    "value": "[parameters('appInsightsInstrumentKey')]"
+                  },
+                  "appInsightsAppId": {
+                    "value": "[parameters('appInsightsAppId')]"
+                  },
+                  "batchPoolSubnetId_Linux": {
+                    "value": "[variables('batchPoolSubnetId_Linux')]"
+                  },
+                  "batchPoolSubnetId_LinuxNoSsh": {
+                    "value": "[variables('batchPoolSubnetId_LinuxNoSsh')]"
+                  },
+                  "batchPoolSubnetId_Windows": {
+                    "value": "[variables('batchPoolSubnetId_Windows')]"
+                  },
+                  "saNameStorageSMB": {
+                    "value": "[parameters('saNameStorageSMB')]"
+                  },
+                  "saNameStorageNFS": {
+                    "value": "[parameters('saNameStorageNFS')]"
                   }
                 },
                 "template": {
@@ -8005,7 +7515,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1008.15138",
-                      "templateHash": "1753992503606176810"
+                      "templateHash": "1802906545104741774"
                     }
                   },
                   "parameters": {
@@ -8015,38 +7525,371 @@
                     "batchManagedIdentity": {
                       "type": "string"
                     },
-                    "batchPoolObject": {
-                      "type": "object"
+                    "acrName": {
+                      "type": "string"
+                    },
+                    "acrImageName": {
+                      "type": "string"
+                    },
+                    "batchNodeSku": {
+                      "type": "string"
+                    },
+                    "appInsightsInstrumentKey": {
+                      "type": "string"
+                    },
+                    "appInsightsAppId": {
+                      "type": "string"
+                    },
+                    "batchPoolSubnetId_Linux": {
+                      "type": "string"
+                    },
+                    "batchPoolSubnetId_LinuxNoSsh": {
+                      "type": "string"
+                    },
+                    "batchPoolSubnetId_Windows": {
+                      "type": "string"
+                    },
+                    "saNameStorageSMB": {
+                      "type": "string"
+                    },
+                    "saNameStorageNFS": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
                     }
                   },
                   "functions": [],
+                  "variables": {
+                    "preloadContainerImage": "[format('{0}.azurecr.io/{1}:latest', parameters('acrName'), parameters('acrImageName'))]",
+                    "containerRegistryServer": "[format('{0}.azurecr.io', parameters('acrName'))]",
+                    "smbShareName": "share",
+                    "smbShareURL": "[format('https://{0}.file.{1}/{2}', parameters('saNameStorageSMB'), environment().suffixes.storage, variables('smbShareName'))]",
+                    "nfsShareName": "container",
+                    "nfsShareSource": "[format('{0}.blob.{1}:/{2}/{3}', parameters('saNameStorageNFS'), environment().suffixes.storage, parameters('saNameStorageNFS'), variables('nfsShareName'))]",
+                    "nfsMountOptions": "-o sec=sys,vers=3,nolock,proto=tcp"
+                  },
                   "resources": [
                     {
-                      "type": "Microsoft.Batch/batchAccounts/pools",
-                      "apiVersion": "2021-06-01",
-                      "name": "[format('{0}/{1}', parameters('batchAccountName'), parameters('batchPoolObject').poolName)]",
-                      "identity": {
-                        "type": "UserAssigned",
-                        "userAssignedIdentities": {
-                          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('batchManagedIdentity')))]": {}
-                        }
-                      },
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2020-06-01",
+                      "name": "[format('dpl-{0}-batchPoolCollection', uniqueString(deployment().name, parameters('location')))]",
                       "properties": {
-                        "displayName": "[parameters('batchPoolObject').poolName]",
-                        "vmSize": "[parameters('batchPoolObject').vmSize]",
-                        "taskSlotsPerNode": "[parameters('batchPoolObject').taskSlotsPerNode]",
-                        "taskSchedulingPolicy": "[parameters('batchPoolObject').taskSchedulingPolicy]",
-                        "deploymentConfiguration": "[parameters('batchPoolObject').deploymentConfiguration]",
-                        "scaleSettings": "[parameters('batchPoolObject').scaleSettings]",
-                        "interNodeCommunication": "[parameters('batchPoolObject').interNodeCommunication]",
-                        "networkConfiguration": "[parameters('batchPoolObject').networkConfiguration]"
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "batchAccountName": {
+                            "value": "[parameters('batchAccountName')]"
+                          },
+                          "batchPoolObjects": {
+                            "value": [
+                              {
+                                "poolName": "linux-dev-pool",
+                                "vmSize": "[parameters('batchNodeSku')]",
+                                "taskSlotsPerNode": 2,
+                                "taskSchedulingPolicy": {
+                                  "nodeFillType": "Pack"
+                                },
+                                "deploymentConfiguration": {
+                                  "virtualMachineConfiguration": {
+                                    "imageReference": {
+                                      "publisher": "microsoft-azure-batch",
+                                      "offer": "ubuntu-server-container",
+                                      "sku": "20-04-lts",
+                                      "version": "latest"
+                                    },
+                                    "nodeAgentSkuId": "batch.node.ubuntu 20.04",
+                                    "containerConfiguration": {
+                                      "type": "DockerCompatible",
+                                      "containerImageNames": [
+                                        "[variables('preloadContainerImage')]"
+                                      ],
+                                      "containerRegistries": [
+                                        {
+                                          "identityReference": {
+                                            "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('batchManagedIdentity'))]"
+                                          },
+                                          "registryServer": "[variables('containerRegistryServer')]"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                "scaleSettings": {
+                                  "fixedScale": {
+                                    "targetDedicatedNodes": 0,
+                                    "targetLowPriorityNodes": 0,
+                                    "resizeTimeout": "PT15M"
+                                  }
+                                },
+                                "mountConfiguration": [
+                                  {
+                                    "nfsMountConfiguration": {
+                                      "source": "[variables('nfsShareSource')]",
+                                      "relativeMountPath": "shared",
+                                      "mountOptions": "[variables('nfsMountOptions')]"
+                                    }
+                                  }
+                                ],
+                                "startTask": {
+                                  "commandLine": "/bin/bash -c 'wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-linux.sh | bash'",
+                                  "environmentSettings": [
+                                    {
+                                      "name": "APP_INSIGHTS_INSTRUMENTATION_KEY",
+                                      "value": "[parameters('appInsightsInstrumentKey')]"
+                                    },
+                                    {
+                                      "name": "APP_INSIGHTS_APP_ID",
+                                      "value": "[parameters('appInsightsAppId')]"
+                                    },
+                                    {
+                                      "name": "BATCH_INSIGHTS_DOWNLOAD_URL",
+                                      "value": "https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights"
+                                    }
+                                  ],
+                                  "maxTaskRetryCount": 1,
+                                  "userIdentity": {
+                                    "autoUser": {
+                                      "elevationLevel": "Admin",
+                                      "scope": "Pool"
+                                    }
+                                  },
+                                  "waitForSuccess": true
+                                },
+                                "interNodeCommunication": "Disabled",
+                                "networkConfiguration": {
+                                  "subnetId": "[parameters('batchPoolSubnetId_Linux')]",
+                                  "publicIPAddressConfiguration": {
+                                    "provision": "NoPublicIPAddresses"
+                                  }
+                                }
+                              },
+                              {
+                                "poolName": "linux-prod-pool",
+                                "vmSize": "[parameters('batchNodeSku')]",
+                                "taskSlotsPerNode": 2,
+                                "taskSchedulingPolicy": {
+                                  "nodeFillType": "Pack"
+                                },
+                                "deploymentConfiguration": {
+                                  "virtualMachineConfiguration": {
+                                    "imageReference": {
+                                      "publisher": "microsoft-azure-batch",
+                                      "offer": "ubuntu-server-container",
+                                      "sku": "20-04-lts",
+                                      "version": "latest"
+                                    },
+                                    "nodeAgentSkuId": "batch.node.ubuntu 20.04",
+                                    "containerConfiguration": {
+                                      "type": "DockerCompatible",
+                                      "containerImageNames": [
+                                        "[variables('preloadContainerImage')]"
+                                      ],
+                                      "containerRegistries": [
+                                        {
+                                          "identityReference": {
+                                            "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('batchManagedIdentity'))]"
+                                          },
+                                          "registryServer": "[variables('containerRegistryServer')]"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                "scaleSettings": {
+                                  "autoScale": {
+                                    "evaluationInterval": "PT5M",
+                                    "formula": "        startingNumberOfVMs = 0;\n        maxNumberofVMs = 2;\n        pendingTaskSamplePercent = $PendingTasks.GetSamplePercent(180 * TimeInterval_Second);\n        pendingTaskSamples = pendingTaskSamplePercent < 70 ? startingNumberOfVMs : avg($PendingTasks.GetSample(180 *   TimeInterval_Second));\n        $TargetDedicatedNodes=min(maxNumberofVMs, pendingTaskSamples);\n        $NodeDeallocationOption=taskcompletion \n        "
+                                  }
+                                },
+                                "mountConfiguration": [
+                                  {
+                                    "nfsMountConfiguration": {
+                                      "source": "[variables('nfsShareSource')]",
+                                      "relativeMountPath": "shared",
+                                      "mountOptions": "[variables('nfsMountOptions')]"
+                                    }
+                                  }
+                                ],
+                                "startTask": {
+                                  "commandLine": "/bin/bash -c 'wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-linux.sh | bash'",
+                                  "environmentSettings": [
+                                    {
+                                      "name": "APP_INSIGHTS_INSTRUMENTATION_KEY",
+                                      "value": "[parameters('appInsightsInstrumentKey')]"
+                                    },
+                                    {
+                                      "name": "APP_INSIGHTS_APP_ID",
+                                      "value": "[parameters('appInsightsAppId')]"
+                                    },
+                                    {
+                                      "name": "BATCH_INSIGHTS_DOWNLOAD_URL",
+                                      "value": "https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights"
+                                    }
+                                  ],
+                                  "maxTaskRetryCount": 1,
+                                  "userIdentity": {
+                                    "autoUser": {
+                                      "elevationLevel": "Admin",
+                                      "scope": "Pool"
+                                    }
+                                  },
+                                  "waitForSuccess": true
+                                },
+                                "interNodeCommunication": "Disabled",
+                                "networkConfiguration": {
+                                  "subnetId": "[parameters('batchPoolSubnetId_LinuxNoSsh')]",
+                                  "publicIPAddressConfiguration": {
+                                    "provision": "NoPublicIPAddresses"
+                                  }
+                                }
+                              },
+                              {
+                                "poolName": "windows-dev-pool",
+                                "vmSize": "[parameters('batchNodeSku')]",
+                                "taskSlotsPerNode": 2,
+                                "taskSchedulingPolicy": {
+                                  "nodeFillType": "Pack"
+                                },
+                                "deploymentConfiguration": {
+                                  "virtualMachineConfiguration": {
+                                    "imageReference": {
+                                      "publisher": "microsoftwindowsserver",
+                                      "offer": "windowsserver",
+                                      "sku": "2022-datacenter-smalldisk",
+                                      "version": "latest"
+                                    },
+                                    "nodeAgentSkuId": "batch.node.windows amd64",
+                                    "windowsConfiguration": {
+                                      "enableAutomaticUpdates": true
+                                    }
+                                  }
+                                },
+                                "scaleSettings": {
+                                  "fixedScale": {
+                                    "targetDedicatedNodes": 0,
+                                    "targetLowPriorityNodes": 0,
+                                    "resizeTimeout": "PT15M"
+                                  }
+                                },
+                                "mountConfiguration": [
+                                  {
+                                    "azureFileShareConfiguration": {
+                                      "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('saNameStorageSMB')), '2021-06-01').keys[0].value]",
+                                      "accountName": "[parameters('saNameStorageSMB')]",
+                                      "azureFileUrl": "[variables('smbShareURL')]",
+                                      "relativeMountPath": "S"
+                                    }
+                                  }
+                                ],
+                                "startTask": {
+                                  "commandLine": "cmd /c @\"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command \"iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Azure/batch-insights/master/scripts/run-windows.ps1'))\" & python-3.10.1-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0",
+                                  "resourceFiles": [
+                                    {
+                                      "httpUrl": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/Python/python-3.10.1-amd64.exe",
+                                      "filePath": "python-3.10.1-amd64.exe"
+                                    }
+                                  ],
+                                  "environmentSettings": [
+                                    {
+                                      "name": "APP_INSIGHTS_INSTRUMENTATION_KEY",
+                                      "value": "[parameters('appInsightsInstrumentKey')]"
+                                    },
+                                    {
+                                      "name": "APP_INSIGHTS_APP_ID",
+                                      "value": "[parameters('appInsightsAppId')]"
+                                    },
+                                    {
+                                      "name": "BATCH_INSIGHTS_DOWNLOAD_URL",
+                                      "value": "https://github.com/Azure/batch-insights/releases/download/v1.3.0/batch-insights.exe"
+                                    }
+                                  ],
+                                  "maxTaskRetryCount": 1,
+                                  "userIdentity": {
+                                    "autoUser": {
+                                      "elevationLevel": "Admin",
+                                      "scope": "Pool"
+                                    }
+                                  },
+                                  "waitForSuccess": true
+                                },
+                                "interNodeCommunication": "Disabled",
+                                "networkConfiguration": {
+                                  "subnetId": "[parameters('batchPoolSubnetId_Windows')]",
+                                  "publicIPAddressConfiguration": {
+                                    "provision": "NoPublicIPAddresses"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          "batchManagedIdentityId": {
+                            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('batchManagedIdentity'))]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.4.1008.15138",
+                              "templateHash": "16779059004869730197"
+                            }
+                          },
+                          "parameters": {
+                            "batchAccountName": {
+                              "type": "string"
+                            },
+                            "batchManagedIdentityId": {
+                              "type": "string"
+                            },
+                            "batchPoolObjects": {
+                              "type": "array"
+                            }
+                          },
+                          "functions": [],
+                          "resources": [
+                            {
+                              "copy": {
+                                "name": "batchAccountPool",
+                                "count": "[length(parameters('batchPoolObjects'))]",
+                                "mode": "serial",
+                                "batchSize": 1
+                              },
+                              "type": "Microsoft.Batch/batchAccounts/pools",
+                              "apiVersion": "2021-06-01",
+                              "name": "[format('{0}/{1}', parameters('batchAccountName'), parameters('batchPoolObjects')[copyIndex()].poolName)]",
+                              "identity": {
+                                "type": "UserAssigned",
+                                "userAssignedIdentities": {
+                                  "[format('{0}', parameters('batchManagedIdentityId'))]": {}
+                                }
+                              },
+                              "properties": {
+                                "displayName": "[parameters('batchPoolObjects')[copyIndex()].poolName]",
+                                "vmSize": "[parameters('batchPoolObjects')[copyIndex()].vmSize]",
+                                "taskSlotsPerNode": "[parameters('batchPoolObjects')[copyIndex()].taskSlotsPerNode]",
+                                "taskSchedulingPolicy": "[parameters('batchPoolObjects')[copyIndex()].taskSchedulingPolicy]",
+                                "deploymentConfiguration": "[parameters('batchPoolObjects')[copyIndex()].deploymentConfiguration]",
+                                "scaleSettings": "[parameters('batchPoolObjects')[copyIndex()].scaleSettings]",
+                                "interNodeCommunication": "[parameters('batchPoolObjects')[copyIndex()].interNodeCommunication]",
+                                "networkConfiguration": "[parameters('batchPoolObjects')[copyIndex()].networkConfiguration]",
+                                "startTask": "[if(contains(parameters('batchPoolObjects')[copyIndex()], 'startTask'), parameters('batchPoolObjects')[copyIndex()].startTask, '')]",
+                                "mountConfiguration": "[if(contains(parameters('batchPoolObjects')[copyIndex()], 'mountConfiguration'), parameters('batchPoolObjects')[copyIndex()].mountConfiguration, '')]"
+                              }
+                            }
+                          ]
+                        }
                       }
                     }
                   ]
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('batchManagedIdentity'))]",
                 "[resourceId('Microsoft.Resources/deployments', format('dpl-{0}-batchAccount', uniqueString(deployment().name, parameters('location'))))]"
               ]
             }
@@ -8055,6 +7898,401 @@
       },
       "dependsOn": [
         "[subscriptionResourceId('Microsoft.Resources/deployments', format('dpl-{0}-hubSpoke', uniqueString(deployment().name, deployment().location)))]"
+      ]
+    },
+    {
+      "condition": "[parameters('deployJumpBoxVMs')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "[format('dpl-{0}-jumpbox', uniqueString(deployment().name, deployment().location))]",
+      "resourceGroup": "[variables('rgJumpbox')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vmExtensionWindowsJumpboxUri": {
+            "value": "[parameters('vmExtensionWindowsJumpboxUri')]"
+          },
+          "vmObjectJumpboxWindows": {
+            "value": "[variables('vmObjectJumpboxWindows')]"
+          },
+          "vmObjectJumpbox": {
+            "value": "[variables('vmObjectJumpbox')]"
+          },
+          "vNetHubObject": {
+            "value": "[variables('vNetHubObject')]"
+          },
+          "deployJumpboxWindowsAddOns": {
+            "value": "[parameters('deployJumpboxWindowsAddOns')]"
+          },
+          "rgHub": {
+            "value": "[variables('rgHub')]"
+          },
+          "tags": {
+            "value": "[parameters('resourceTags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1008.15138",
+              "templateHash": "10476451316434636368"
+            }
+          },
+          "parameters": {
+            "vNetHubObject": {
+              "type": "object"
+            },
+            "vmObjectJumpbox": {
+              "type": "object"
+            },
+            "vmObjectJumpboxWindows": {
+              "type": "object"
+            },
+            "deployJumpboxWindowsAddOns": {
+              "type": "bool"
+            },
+            "vmExtensionWindowsJumpboxUri": {
+              "type": "string"
+            },
+            "rgHub": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {}
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "deployJumpBoxVM",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "subnetId": {
+                    "value": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Network/virtualNetworks', parameters('vNetHubObject').vNetName), parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionJumpBox].subnetName)]"
+                  },
+                  "vmObject": {
+                    "value": "[parameters('vmObjectJumpbox')]"
+                  },
+                  "tags": {
+                    "value": "[parameters('tags')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "7320768108174916471"
+                    }
+                  },
+                  "parameters": {
+                    "vmCount": {
+                      "type": "int",
+                      "defaultValue": 1
+                    },
+                    "vmObject": {
+                      "type": "object"
+                    },
+                    "subnetId": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "type": "object",
+                      "defaultValue": {}
+                    }
+                  },
+                  "functions": [],
+                  "resources": [
+                    {
+                      "copy": {
+                        "name": "nicNameVMResource",
+                        "count": "[length(range(0, parameters('vmCount')))]"
+                      },
+                      "type": "Microsoft.Network/networkInterfaces",
+                      "apiVersion": "2020-05-01",
+                      "name": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                      "location": "[resourceGroup().location]",
+                      "tags": "[parameters('tags')]",
+                      "properties": {
+                        "ipConfigurations": [
+                          {
+                            "name": "ipconfig",
+                            "properties": {
+                              "privateIPAllocationMethod": "Dynamic",
+                              "subnet": {
+                                "id": "[parameters('subnetId')]"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "copy": {
+                        "name": "vmResource",
+                        "count": "[length(range(0, parameters('vmCount')))]"
+                      },
+                      "type": "Microsoft.Compute/virtualMachines",
+                      "apiVersion": "2019-07-01",
+                      "name": "[format('{0}{1}', parameters('vmObject').vmName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                      "location": "[resourceGroup().location]",
+                      "tags": "[parameters('tags')]",
+                      "properties": {
+                        "hardwareProfile": {
+                          "vmSize": "[parameters('vmObject').vmSize]"
+                        },
+                        "osProfile": "[parameters('vmObject').osProfile]",
+                        "storageProfile": {
+                          "imageReference": "[parameters('vmObject').imageReference]",
+                          "osDisk": {
+                            "createOption": "FromImage"
+                          }
+                        },
+                        "networkProfile": {
+                          "networkInterfaces": [
+                            {
+                              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)))]"
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "nicNameVMResource"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "deployJumpBoxWindowsVM",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "subnetId": {
+                    "value": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Network/virtualNetworks', parameters('vNetHubObject').vNetName), parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionJumpBox].subnetName)]"
+                  },
+                  "vmObject": {
+                    "value": "[parameters('vmObjectJumpboxWindows')]"
+                  },
+                  "vmCount": {
+                    "value": 1
+                  },
+                  "tags": {
+                    "value": "[parameters('tags')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "7320768108174916471"
+                    }
+                  },
+                  "parameters": {
+                    "vmCount": {
+                      "type": "int",
+                      "defaultValue": 1
+                    },
+                    "vmObject": {
+                      "type": "object"
+                    },
+                    "subnetId": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "type": "object",
+                      "defaultValue": {}
+                    }
+                  },
+                  "functions": [],
+                  "resources": [
+                    {
+                      "copy": {
+                        "name": "nicNameVMResource",
+                        "count": "[length(range(0, parameters('vmCount')))]"
+                      },
+                      "type": "Microsoft.Network/networkInterfaces",
+                      "apiVersion": "2020-05-01",
+                      "name": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                      "location": "[resourceGroup().location]",
+                      "tags": "[parameters('tags')]",
+                      "properties": {
+                        "ipConfigurations": [
+                          {
+                            "name": "ipconfig",
+                            "properties": {
+                              "privateIPAllocationMethod": "Dynamic",
+                              "subnet": {
+                                "id": "[parameters('subnetId')]"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "copy": {
+                        "name": "vmResource",
+                        "count": "[length(range(0, parameters('vmCount')))]"
+                      },
+                      "type": "Microsoft.Compute/virtualMachines",
+                      "apiVersion": "2019-07-01",
+                      "name": "[format('{0}{1}', parameters('vmObject').vmName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                      "location": "[resourceGroup().location]",
+                      "tags": "[parameters('tags')]",
+                      "properties": {
+                        "hardwareProfile": {
+                          "vmSize": "[parameters('vmObject').vmSize]"
+                        },
+                        "osProfile": "[parameters('vmObject').osProfile]",
+                        "storageProfile": {
+                          "imageReference": "[parameters('vmObject').imageReference]",
+                          "osDisk": {
+                            "createOption": "FromImage"
+                          }
+                        },
+                        "networkProfile": {
+                          "networkInterfaces": [
+                            {
+                              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)))]"
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "nicNameVMResource"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "condition": "[parameters('deployJumpboxWindowsAddOns')]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "depoyWindowsJumpboxVMExtension",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "virtualMachineExtensionCustomScriptUri": {
+                    "value": "[parameters('vmExtensionWindowsJumpboxUri')]"
+                  },
+                  "vmExtensionName": {
+                    "value": "addJumpboxSoftware"
+                  },
+                  "vmName": {
+                    "value": "[format('{0}1', parameters('vmObjectJumpboxWindows').vmName)]"
+                  },
+                  "tags": {
+                    "value": "[parameters('tags')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "9986773824395740186"
+                    }
+                  },
+                  "parameters": {
+                    "vmName": {
+                      "type": "string"
+                    },
+                    "vmExtensionName": {
+                      "type": "string"
+                    },
+                    "virtualMachineExtensionCustomScriptUri": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "type": "object",
+                      "defaultValue": {}
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "currentTime": {
+                      "type": "string",
+                      "defaultValue": "[utcNow()]"
+                    }
+                  },
+                  "functions": [],
+                  "variables": {
+                    "virtualMachineExtensionCustomScript": {
+                      "name": "[format('{0}/{1}', parameters('vmName'), parameters('vmExtensionName'))]",
+                      "location": "[parameters('location')]",
+                      "fileUris": [
+                        "[parameters('virtualMachineExtensionCustomScriptUri')]"
+                      ],
+                      "commandToExecute": "[format('powershell -ExecutionPolicy Unrestricted -File ./{0}', last(split(parameters('virtualMachineExtensionCustomScriptUri'), '/')))]"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Compute/virtualMachines/extensions",
+                      "apiVersion": "2020-06-01",
+                      "name": "[variables('virtualMachineExtensionCustomScript').name]",
+                      "location": "[variables('virtualMachineExtensionCustomScript').location]",
+                      "tags": "[parameters('tags')]",
+                      "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.10",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                          "fileUris": "[variables('virtualMachineExtensionCustomScript').fileUris]",
+                          "commandToExecute": "[variables('virtualMachineExtensionCustomScript').commandToExecute]"
+                        },
+                        "protectedSettings": {},
+                        "forceUpdateTag": "[parameters('currentTime')]"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'deployJumpBoxWindowsVM')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgAzureBatch')), 'Microsoft.Resources/deployments', format('dpl-{0}-azBatchSecured', uniqueString(deployment().name, deployment().location)))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('dpl-{0}-hubSpoke', uniqueString(deployment().name, deployment().location)))]",
+        "rgModule"
       ]
     }
   ]
