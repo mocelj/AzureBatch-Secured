@@ -1,16 +1,109 @@
-# AzureBatch-Secured
-Example which demonstrates how to deploy Azure Batch in a "secured" way.
+# Deploy AzureBatch in a Secured Environment
 
-This is work in progress ...
+This goal of this repository is to demonstrate how Azure Batch could be deployed in a secured environment, which is often a requirement in regulated industries such as Pharma, Life Sciences or Banking and Capital Markets. 
 
-Currently, the following resources are deployed to your Azure Subscription:
+
+## High-Level Overview
 
 ![Overview](./images/batch-private-cluster.png)
 
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmocelj%2FAzureBatch-Secured%2Fmain%2Fazuredeploy.json)
 
+[See explanation of the parameters](##Parameters)
 
+## Short summary of the deployment:
+
+Currently, the following resources are deployed to your Azure Subscription:
+
+- Azure Batch will be deployed in User-Subscription mode 
+- Azure Batch Service will be deployed in a private endpoint configuration
+- All other services will be exposes through private endpoints. For instance: 
+
+    - Storage (Blob, NFS Share, SMB Share)
+    - Azure Key Vault
+    - Azure Container Registry
+
+
+- No puplic IPs are exposed on the pool nodes (thus any outgoing traffic will be routed through the Azure Firewall)
+
+- The Azure Batch Pool will be deplyed with a Managed Identity which has the permissions to pull images from the Azure Container Registry
+
+- In total, 3 pools will be deployed in individual subnets:
+    - linux-dev-pool (Static Scaling,Azure Container Registry configured, NFS Share mounted)
+    - linux-prod-pool (Auto Scaling enabled, Azure Container Registry configured, NFS Share mounted, connection to the nodes via ssh not allowed)
+    - windows-dev-pool (Static Scaling, SMB Share mouted, Pyhton installed on nodes)
+
+
+- A VPN Gateway will be deployed as part of the end-to-end example
+
+- Azure Bastion Service will be deployed to allow access to the Linux and Windows Jumpboxes if a VPN Gateway is not desired.
+
+- An Azure Firewall will be deployed and all internet bound traffic will be routed through Route Tables to the Azure Firewall. Rules are configured to allow Linux & Windows Updates and package retrieval.
+
+- During the deployment a test docker container will be created and pushed to the secured ACR. The purpose of this container is to test the managed identity assigned to the pool by retrieving the list of secrets stored in the Key Vault and displaying it's name. The MI has RBAC permissions assingned on the Key Vault.
+
+- The Windows Jumpbox will have the following software preinstalled: 
+    - Azure Batch Explorer
+    - Azure Storage Explorer
+    - Azure CLI
+
+- The Linux Jumpbox will have the following additonal packages preinstalled:
+    -  azure-cli 
+    - nfs-common 
+    - jq 
+    - will mount the blob storage (mounted through NFS 3)
+
+
+
+## Additonal Notes:
+
+- Make sure you have enough quota of the VM types selected, if you are deploying Azure Batch in User Subscription mode for the first time. [See Batch VM Sizes guidelines.](https://docs.microsoft.com/en-us/azure/batch/batch-pool-vm-sizes)
+
+- Create a Certificate for the VPN Gateway and Configure a Point-to-Site configuration if desired. [You can start with the configuration here](https://docs.microsoft.com/en-us/azure/batch/batch-pool-vm-sizes)
+
+
+## How to test your deployment
+
+- Manually Scale the Linux-Dev and Windows-Dev Pools 
+- Create a Job on each of the individual Azure Batch Pools
+- For the Linux Pools: Create a task which will query the KV and list all secrets:
+Replace GUID and ENV with the values created during your deployment
+```
+...
+
+"commandLine": "python ./testKvSecrets.py -k kv-<ENV>-<GUID>-ba",
+  "resourceFiles": [],
+  "containerSettings": {
+    "containerRunOptions": "--rm --workdir /app",
+    "imageName": "acry<ENV><GUID>azbatch.azurecr.io/kvsecretsmi:latest",
+    "workingDirectory": "taskWorkingDirectory"
+  },
+
+...
+```
+- For the Linux Pool with auto-scaling, test the scaling formula, with submitting 1,2, or multiple tasks. It will take a moment for the autoscaling to kick-in and provision the nodes. The nodes will be de-provisioned after the task execution.
+
+- The Windows Pool can be tested by checking the installed python version:
+```
+...
+
+  "commandLine": "cmd /c \"python -V\"",
+  "resourceFiles": [],
+  "environmentSettings": [],
+
+...
+```
+
+## What's Next
+
+- Monitoring of the components / Create an Azure Dashboard
+- Add more examples do show-case how Azure Batch could be leveraged for HPC workloads
+    - e.g. leverage Azure Redis Cache for Data Ingestion / Egress from Nodes
+    - add an example which leverages Azure Batch Application Packages
+    - add an example to showcase how to build a custom image and use it in Azure Batch
+
+# l
 ## Parameters
 
 | Parameter Name | Type | Default Value | Possible Values | Description |
