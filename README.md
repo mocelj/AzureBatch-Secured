@@ -1,4 +1,4 @@
-# Deploy AzureBatch in a Secured Environment
+# Deploy Azure Batch in a Secured Environment
 
 This goal of this repository is to demonstrate how Azure Batch could be deployed in a secured environment, which is often a requirement in regulated industries such as Pharma, Life Sciences or Banking and Capital Markets. 
 
