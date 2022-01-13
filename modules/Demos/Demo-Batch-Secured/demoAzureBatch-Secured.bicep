@@ -44,9 +44,6 @@ param batchAccountName string
 
 param batchNodeSku string
 
-//param appInsightsInstrumentKey string
-//param appInsightsAppId string
-
 param location string = resourceGroup().location
 
 param appInsightsName string 
@@ -66,17 +63,16 @@ param appInsightsName string
 //  - Pools
 //------------------------------------------------------------------------
 
+
+// Generic References used in the deployment script
+//------------------------------------------------------------------------
+
 resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
   scope: resourceGroup(rgHub)
   name: appInsightsName
 }
 var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
 var appInsightsAppId = appInsightsRef.properties.ApplicationId
-
-
-// Generic References used in the deployment script
-//------------------------------------------------------------------------
-
 module deployBatchRoleAssignment '../../../modules/azRoles/roleAssignmentSubscription.bicep' = if (assignBatchServiceRoles) {
   name: 'dpl-${uniqueString(deployment().name,location)}-batchRoleAssignment'
   params: {

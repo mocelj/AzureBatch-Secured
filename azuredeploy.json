@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "15254787557515888059"
+      "templateHash": "14275053937924805988"
     }
   },
   "parameters": {
@@ -15,7 +15,19 @@
       "allowedValues": [
         "eastus",
         "eastus2",
-        "westeurope"
+        "southcentralus",
+        "westus2",
+        "australiaeast",
+        "northeurope",
+        "westeurope",
+        "centralus",
+        "northcentralus",
+        "westus",
+        "eastasia",
+        "japaneast",
+        "francecentral",
+        "westcentralus",
+        "japanwest"
       ],
       "metadata": {
         "description": "Resource Group deployment region"
@@ -645,6 +657,23 @@
               "destinationPorts": [
                 123
               ]
+            },
+            {
+              "name": "Dev-Jumpboxes",
+              "protocols": [
+                "Any"
+              ],
+              "sourceAddresses": [
+                "10.1.4.4",
+                "10.1.4.5"
+              ],
+              "destinationAddresses": [
+                "*"
+              ],
+              "sourceIpGroups": [],
+              "destinationIpGroups": [],
+              "destinationFqdns": [],
+              "destinationPorts": []
             }
           ]
         }

@@ -2,7 +2,7 @@
 Purpose : Main Deployment File
 Author  : Darko Mocelj
 Date    : 25.11.2021
-Update  : 12.01.2022
+Update  : 13.01.2022
 Comments: Still work in progress...
 */
 
@@ -14,30 +14,31 @@ targetScope = 'subscription'
 // Global Parameters
 //-------------------------------------------------------
 @description('Resource Group deployment region')
-// To-Be-Confirmed which regions support Batch-Accounts with no-public IPs
+// https://docs.microsoft.com/en-us/azure/batch/batch-pool-no-public-ip-address
+// as of Jan, 13th, 2022
 @allowed( [
   'eastus'
   'eastus2'
-  // 'southcentralus'
-  // 'westus2'
+  'southcentralus'
+  'westus2'
   // 'westus3'
-  // 'australiaeast'
+  'australiaeast'
   // 'southeastasia'
-  // 'northeurope'
+  'northeurope'
   // 'swedencentral'
   // 'uksouth'
-   'westeurope'
-  // 'centralus'
-  // 'northcentralus'
-  // 'westus'
+  'westeurope'
+  'centralus'
+  'northcentralus'
+  'westus'
   // 'southafricanorth'
   // 'centralindia'
-  // 'eastasia'
-  // 'japaneast'
+  'eastasia'
+  'japaneast'
   // 'jioindiawest'
   // 'koreacentral'
   // 'canadacentral'
-  // 'francecentral'
+   'francecentral'
   // 'germanywestcentral'
   // 'norwayeast'
   // 'switzerlandnorth'
@@ -72,12 +73,12 @@ targetScope = 'subscription'
   // 'southeastasiastage'
   // 'centraluseuap'
   // 'eastus2euap'
-  // 'westcentralus'
+   'westcentralus'
   // 'southafricawest'
   // 'australiacentral'
   // 'australiacentral2'
   // 'australiasoutheast'
-  // 'japanwest'
+  'japanwest'
   // 'jioindiacentral'
   // 'koreasouth'
   // 'southindia'
@@ -644,6 +645,23 @@ var fwNetworkRuleCollections  = [
             destinationPorts: [
                 123
             ]
+          }
+          {
+            name: 'Dev-Jumpboxes'
+            protocols: [
+                'Any'
+            ]
+            sourceAddresses: [
+              '10.1.4.4'
+              '10.1.4.5'
+            ]
+            destinationAddresses: [
+              '*'
+            ]
+            sourceIpGroups: []
+            destinationIpGroups: []
+            destinationFqdns: []
+            destinationPorts: []
           }
         ]
     }
@@ -1242,16 +1260,6 @@ module deployVPNGwToHub './modules/networking/vpnGateway/deploy.bicep' = if (dep
 
 //---------------------------  Deploy the Azure Batch Demo to Spoke 01------------------------------------------------------
 
-// appInsights parameters can't be referenced in batch-pool for loop via reference object. Pass the values instead directly
-// Reference objects, since I did not want to pass the keys in the output section
-// To-Do: retrieve values from KV
-
-// resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
-//   scope: resourceGroup(rgHub)
-//   name: appInsightsName
-// }
-// var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
-// var appInsightsAppId = appInsightsRef.properties.ApplicationId
 module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzureBatch-Secured.bicep' = if (deploySecureBatch) {
   scope: resourceGroup(rgAzureBatch)
   name: 'dpl-${uniqueString(deployment().name,deployment().location)}-azBatchSecured'
@@ -1261,8 +1269,6 @@ module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzure
     rgSpoke: rgSpoke01
     prefix: prefix
     environment: environment
-    //appInsightsInstrumentKey: appInsightsInstrumentKey
-    //appInsightsAppId: appInsightsAppId
     appInsightsName: appInsightsName
     vNetObject: vNetSpoke01Param
     saDefinitions: saDefinitions
