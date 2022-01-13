@@ -108,7 +108,7 @@ Replace GUID and ENV with the values created during your deployment
 
 | Parameter Name | Type | Default Value | Possible Values | Description |
 | :-- | :-- | :-- | :-- | :-- |
-| `resourceGroupLocation` | string | `westeurope` | `[eastus,eastus2,westeurope]` |Optional. The region the resources will be deployed to. Default value will be applied in case nothing is provided|
+| `resourceGroupLocation` | string | `westeurope` | [see list with regions in preview here](https://docs.microsoft.com/en-us/azure/batch/batch-pool-no-public-ip-address) |Optional. The region the resources will be deployed to. Default value will be applied in case nothing is provided|
 | `environment` | string | `dev` | `3 character prefix` | Optional. Default value will be applied in case nothing is provided. |
 | `prefix` | string | `unique string created by environment, Subscription Id and resourceGroupLocation` | `-<environment>-<guid>-` | Optional. Default value will be applied in case nothing is provided.  |
 | ` deployHubSpoke` | bool | `true` | `true,false` | Optional. Indicate if Hub-Spoke Network should be deployed. Default value will be applied in case nothing is provided. |
