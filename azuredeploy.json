@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "14275053937924805988"
+      "templateHash": "17137681019463208399"
     }
   },
   "parameters": {
@@ -194,6 +194,7 @@
       "positionFirewall": 1,
       "positionBastion": 2,
       "positionJumpBox": 3,
+      "positionDNS": 4,
       "subnets": [
         {
           "vNetName": "[format('vnet-{0}-{1}-hub-01', parameters('environment'), parameters('prefix'))]",
@@ -370,6 +371,18 @@
             }
           ],
           "rtToAttach": "[format('vnet-{0}-{1}-hub-01-snetJumpbox-rt', parameters('environment'), parameters('prefix'))]",
+          "routes": [],
+          "privateEndpointNetworkPolicies": "Enabled",
+          "PrivateLinkServiceNetworkPolicies": "Enabled"
+        },
+        {
+          "vNetName": "[format('vnet-{0}-{1}-hub-01', parameters('environment'), parameters('prefix'))]",
+          "subnetName": "snet-dns",
+          "SubnetAddressSpace": "10.1.5.0/24",
+          "serviceEndpoints": [],
+          "nsgToAttach": "[format('vnet-{0}-{1}-hub-01-dns-rt', parameters('environment'), parameters('prefix'))]",
+          "securityRules": [],
+          "rtToAttach": "None",
           "routes": [],
           "privateEndpointNetworkPolicies": "Enabled",
           "PrivateLinkServiceNetworkPolicies": "Enabled"
@@ -674,7 +687,7 @@
               "destinationIpGroups": [],
               "destinationFqdns": [],
               "destinationPorts": [
-                 "*"
+                "*"
               ]
             }
           ]
@@ -4658,7 +4671,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "3017451465574647971"
+              "templateHash": "18373950161171333366"
             }
           },
           "parameters": {
@@ -4746,7 +4759,7 @@
             "batchPoolSubnetId_LinuxNoSsh": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke')), 'Microsoft.Network/virtualNetworks', parameters('vNetObject').vNetName), parameters('vNetObject').subnets[parameters('vNetObject').positionLinuxNoSshSubnet].subnetName)]",
             "batchPoolSubnetId_Windows": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke')), 'Microsoft.Network/virtualNetworks', parameters('vNetObject').vNetName), parameters('vNetObject').subnets[parameters('vNetObject').positionWindowsSubnet].subnetName)]",
             "batchManagedIdentity": "[format('id-{0}-{1}-azbatch', parameters('environment'), parameters('prefix'))]",
-            "acrBuildName": "tempacrbuild",
+            "acrBuildName": "[format('acr{0}{1}temp', parameters('environment'), parameters('prefix'))]",
             "acrPrivateEndpoints_tmp": [
               {
                 "name": "[format('{0}-pl', parameters('acrName'))]",
@@ -7968,7 +7981,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "10476451316434636368"
+              "templateHash": "12995020243981865568"
             }
           },
           "parameters": {
@@ -8024,7 +8037,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1008.15138",
-                      "templateHash": "7320768108174916471"
+                      "templateHash": "1080711766590143088"
                     }
                   },
                   "parameters": {
@@ -8102,7 +8115,19 @@
                         "nicNameVMResource"
                       ]
                     }
-                  ]
+                  ],
+                  "outputs": {
+                    "nicDetail": {
+                      "type": "array",
+                      "copy": {
+                        "count": "[length(range(0, parameters('vmCount')))]",
+                        "input": {
+                          "nicName": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                          "privateIp": "[reference(format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)), '2020-05-01', 'Full').properties.ipConfigurations[0].properties.privateIPAddress]"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -8136,7 +8161,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1008.15138",
-                      "templateHash": "7320768108174916471"
+                      "templateHash": "1080711766590143088"
                     }
                   },
                   "parameters": {
@@ -8214,7 +8239,19 @@
                         "nicNameVMResource"
                       ]
                     }
-                  ]
+                  ],
+                  "outputs": {
+                    "nicDetail": {
+                      "type": "array",
+                      "copy": {
+                        "count": "[length(range(0, parameters('vmCount')))]",
+                        "input": {
+                          "nicName": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                          "privateIp": "[reference(format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)), '2020-05-01', 'Full').properties.ipConfigurations[0].properties.privateIPAddress]"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },

@@ -177,6 +177,7 @@ var vNetHubObject  = {
   positionFirewall: 1
   positionBastion: 2
   positionJumpBox: 3
+  positionDNS: 4
   subnets: [
     
       {
@@ -358,6 +359,18 @@ var vNetHubObject  = {
         privateEndpointNetworkPolicies: 'Enabled'
         PrivateLinkServiceNetworkPolicies: 'Enabled'
       }
+      {
+        vNetName: 'vnet-${environment}-${prefix}-hub-01'
+        subnetName: 'snet-dns'
+        SubnetAddressSpace: '10.1.5.0/24'
+        serviceEndpoints: []
+        nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-dns-rt'
+        securityRules: []
+        rtToAttach: 'None'
+        routes: []
+        privateEndpointNetworkPolicies: 'Enabled'
+        PrivateLinkServiceNetworkPolicies: 'Enabled'
+      } 
   ]
 }
 

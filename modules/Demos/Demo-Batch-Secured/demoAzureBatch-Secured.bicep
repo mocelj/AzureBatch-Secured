@@ -216,7 +216,7 @@ module assignStorageAccountRole '../../../modules/storage/roleAssignmentStorage.
 // Import the built containers to the batch ACR through Azure Trusted Servcies enabled
 // delete the temp 'build' ACR in the external build script
 
-var acrBuildName = 'tempacrbuild'
+var acrBuildName = 'acr${environment}${prefix}temp'
 module deployBatchDemoBuildACR '../../../modules/containerRegistry/acr.bicep' = {
   name: 'dpl-${uniqueString(deployment().name,location)}-batchBuildAcr'
   params: {

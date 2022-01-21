@@ -26,6 +26,12 @@ resource nicNameVMResource 'Microsoft.Network/networkInterfaces@2020-05-01' = [f
   }
 }]
 
+output nicDetail array = [for i in range(0, vmCount) : {
+  nicName: '${vmObject.nicName}${i + 1}'
+  privateIp: reference('${vmObject.nicName}${i + 1}', '2020-05-01', 'Full').properties.ipConfigurations[0].properties.privateIPAddress
+}]
+
+
 
 resource vmResource 'Microsoft.Compute/virtualMachines@2019-07-01' = [for i in range(0, vmCount): {
   name: '${vmObject.vmName}${i + 1}'
