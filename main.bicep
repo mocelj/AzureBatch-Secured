@@ -661,7 +661,9 @@ var fwNetworkRuleCollections  = [
             sourceIpGroups: []
             destinationIpGroups: []
             destinationFqdns: []
-            destinationPorts: []
+            destinationPorts: [
+              '*'
+            ]
           }
         ]
     }
