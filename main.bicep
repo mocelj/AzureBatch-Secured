@@ -364,7 +364,7 @@ var vNetHubObject  = {
         subnetName: 'snet-dns'
         SubnetAddressSpace: '10.1.5.0/24'
         serviceEndpoints: []
-        nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-dns-rt'
+        nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-dns-nsg'
         securityRules: []
         rtToAttach: 'None'
         routes: []

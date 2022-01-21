@@ -380,7 +380,7 @@
           "subnetName": "snet-dns",
           "SubnetAddressSpace": "10.1.5.0/24",
           "serviceEndpoints": [],
-          "nsgToAttach": "[format('vnet-{0}-{1}-hub-01-dns-rt', parameters('environment'), parameters('prefix'))]",
+          "nsgToAttach": "[format('vnet-{0}-{1}-hub-01-dns-nsg', parameters('environment'), parameters('prefix'))]",
           "securityRules": [],
           "rtToAttach": "None",
           "routes": [],
