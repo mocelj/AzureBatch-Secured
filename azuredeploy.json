@@ -673,7 +673,9 @@
               "sourceIpGroups": [],
               "destinationIpGroups": [],
               "destinationFqdns": [],
-              "destinationPorts": []
+              "destinationPorts": [
+                 "*"
+              ]
             }
           ]
         }
