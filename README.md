@@ -103,6 +103,10 @@ Replace GUID and ENV with the values created during your deployment
     - add an example which leverages Azure Batch Application Packages
     - add an example to showcase how to build a custom image and use it in Azure Batch
 
+## Demo Add-ons
+
+- [Custom DNS Server / Firewall Proxy](modules/Demos/03-Demo-Custom-DNS/README.md)
+
 # l
 ## Parameters
 
