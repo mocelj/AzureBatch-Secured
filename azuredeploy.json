@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep (Bicep PowerShell 2.1.0)",
       "version": "0.4.1008.15138",
-      "templateHash": "17137681019463208399"
+      "templateHash": "14939649316618798050"
     }
   },
   "parameters": {
@@ -4671,7 +4671,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "18373950161171333366"
+              "templateHash": "15113933110027626258"
             }
           },
           "parameters": {
@@ -7109,12 +7109,16 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1008.15138",
-                      "templateHash": "18266220736719486714"
+                      "templateHash": "8862660433565026859"
                     }
                   },
                   "parameters": {
                     "principalId": {
                       "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
                     },
                     "builtInRoleType": {
                       "type": "string",
@@ -7124,18 +7128,20 @@
                       "allowedValues": [
                         "Owner",
                         "Contributor",
-                        "Reader"
+                        "Reader",
+                        "NetworkContributor"
                       ]
                     },
                     "roleNameGuid": {
                       "type": "string",
-                      "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName)]",
+                      "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName, parameters('location'), resourceGroup().name)]",
                       "metadata": {
                         "description": "A new GUID used to identify the role assignment"
                       }
                     },
                     "principalType": {
                       "type": "string",
+                      "defaultValue": "ServicePrincipal",
                       "allowedValues": [
                         "User",
                         "ServicePrincipal",
@@ -7149,7 +7155,8 @@
                     "role": {
                       "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
                       "Contributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c', subscription().subscriptionId)]",
-                      "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]"
+                      "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]",
+                      "NetworkContributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7', subscription().subscriptionId)]"
                     }
                   },
                   "resources": [

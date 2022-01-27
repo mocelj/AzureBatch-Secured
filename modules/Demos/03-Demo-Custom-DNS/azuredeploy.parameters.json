@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceGroupLocation": {
+      "value": "westeurope"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "prefix": {
+      "value": ""
+    },
+    "utcShort": {
+      "value": "[utcNow('d')]"
+    },
+    "resourceTags": {
+      "value": {
+        "WorkloadName": "Back Office Risk",
+        "BusinessUnit": "Risk Managment",
+        "Owner": "Darko Mocelj",
+        "Environment": "[parameters('environment')]",
+        "CostCenter": "Internal",
+        "LastDeployed": "[parameters('utcShort')]"
+      }
+    },
+    "dnsSubnetName": {
+      "value": "snet-dns"
+    },
+    "adminUserName": {
+      "value": "localadmin"
+    },
+    "dnsLinuxVmSize": {
+      "value": "Standard_B1s"
+    }
+  }
+}

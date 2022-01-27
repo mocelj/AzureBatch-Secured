@@ -1,0 +1,836 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep (Bicep PowerShell 2.1.0)",
+      "version": "0.4.1008.15138",
+      "templateHash": "12107004281679248191"
+    }
+  },
+  "parameters": {
+    "resourceGroupLocation": {
+      "type": "string",
+      "defaultValue": "westeurope",
+      "allowedValues": [
+        "eastus",
+        "eastus2",
+        "southcentralus",
+        "westus2",
+        "australiaeast",
+        "northeurope",
+        "westeurope",
+        "centralus",
+        "northcentralus",
+        "westus",
+        "eastasia",
+        "japaneast",
+        "francecentral",
+        "westcentralus",
+        "japanwest"
+      ],
+      "metadata": {
+        "description": "Resource Group deployment region"
+      }
+    },
+    "environment": {
+      "type": "string",
+      "defaultValue": "dev",
+      "maxLength": 3
+    },
+    "prefix": {
+      "type": "string",
+      "defaultValue": "[uniqueString(parameters('environment'), subscription().id, parameters('resourceGroupLocation'))]",
+      "maxLength": 13
+    },
+    "utcShort": {
+      "type": "string",
+      "defaultValue": "[utcNow('d')]"
+    },
+    "resourceTags": {
+      "type": "object",
+      "defaultValue": {
+        "WorkloadName": "Back Office Risk",
+        "BusinessUnit": "Risk Managment",
+        "Owner": "Darko Mocelj",
+        "Environment": "[parameters('environment')]",
+        "CostCenter": "Internal",
+        "LastDeployed": "[parameters('utcShort')]"
+      }
+    },
+    "dnsSubnetName": {
+      "type": "string",
+      "defaultValue": "snet-dns"
+    },
+    "adminUserName": {
+      "type": "string",
+      "defaultValue": "localadmin"
+    },
+    "adminPassword": {
+      "type": "secureString"
+    },
+    "dnsLinuxVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B1s",
+      "allowedValues": [
+        "Standard_B1s",
+        "Standard_B2ms"
+      ]
+    }
+  },
+  "functions": [],
+  "variables": {
+    "vNetHubName": "[format('vnet-{0}-{1}-hub-01', parameters('environment'), parameters('prefix'))]",
+    "vNetSpoke01": "[format('vnet-{0}-{1}-spoke-01', parameters('environment'), parameters('prefix'))]",
+    "vNetSpoke02": "[format('vnet-{0}-{1}-spoke-02', parameters('environment'), parameters('prefix'))]",
+    "azureFirewallName": "[format('fw-{0}-{1}-vnet-hub-01', parameters('environment'), parameters('prefix'))]",
+    "rgHub": "[format('rg-{0}-{1}-vnet-hub-01', parameters('environment'), parameters('prefix'))]",
+    "rgSpoke01": "[format('rg-{0}-{1}-vnet-spoke-01', parameters('environment'), parameters('prefix'))]",
+    "rgSpoke02": "[format('rg-{0}-{1}-vnet-spoke-02', parameters('environment'), parameters('prefix'))]",
+    "rgDNS": "[format('rg-{0}-{1}-dns', parameters('environment'), parameters('prefix'))]",
+    "miName": "[format('id-{0}-{1}-dns-update', parameters('environment'), parameters('prefix'))]",
+    "resourceGroupNames": [
+      "[variables('rgDNS')]"
+    ],
+    "dnsVMInitScript": "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZV91cGdyYWRlOiB0cnVlCgpwYWNrYWdlczoKICAtIGJpbmQ5Cgp3cml0ZV9maWxlczoKICAtIG93bmVyOiBiaW5kOmJpbmQKICAgIHBhdGg6IC9ldGMvYmluZC9uYW1lZC5jb25mLm9wdGlvbnMKICAgIGNvbnRlbnQ6IHwKICAgICAgb3B0aW9ucyB7CiAgICAgICAgZGlyZWN0b3J5ICIvdmFyL2NhY2hlL2JpbmQiOwoKICAgICAgICAvLyBJZiB0aGVyZSBpcyBhIGZpcmV3YWxsIGJldHdlZW4geW91IGFuZCBuYW1lc2VydmVycyB5b3Ugd2FudAogICAgICAgIC8vIHRvIHRhbGsgdG8sIHlvdSBtYXkgbmVlZCB0byBmaXggdGhlIGZpcmV3YWxsIHRvIGFsbG93IG11bHRpcGxlCiAgICAgICAgLy8gcG9ydHMgdG8gdGFsay4gIFNlZSBodHRwOi8vd3d3LmtiLmNlcnQub3JnL3Z1bHMvaWQvODAwMTEzCgogICAgICAgIC8vIElmIHlvdXIgSVNQIHByb3ZpZGVkIG9uZSBvciBtb3JlIElQIGFkZHJlc3NlcyBmb3Igc3RhYmxlIAogICAgICAgIC8vIG5hbWVzZXJ2ZXJzLCB5b3UgcHJvYmFibHkgd2FudCB0byB1c2UgdGhlbSBhcyBmb3J3YXJkZXJzLiAgCiAgICAgICAgLy8gVW5jb21tZW50IHRoZSBmb2xsb3dpbmcgYmxvY2ssIGFuZCBpbnNlcnQgdGhlIGFkZHJlc3NlcyByZXBsYWNpbmcgCiAgICAgICAgLy8gdGhlIGFsbC0wJ3MgcGxhY2Vob2xkZXIuCgogICAgICAgIGFsbG93LXF1ZXJ5IHsgYW55OyB9OyAKCiAgICAgICAgZm9yd2FyZGVycyB7CiAgICAgICAgIDE2OC42My4xMjkuMTY7CiAgICAgICAgfTsKCiAgICAgICAgLy89PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KICAgICAgICAvLyBJZiBCSU5EIGxvZ3MgZXJyb3IgbWVzc2FnZXMgYWJvdXQgdGhlIHJvb3Qga2V5IGJlaW5nIGV4cGlyZWQsCiAgICAgICAgLy8geW91IHdpbGwgbmVlZCB0byB1cGRhdGUgeW91ciBrZXlzLiAgU2VlIGh0dHBzOi8vd3d3LmlzYy5vcmcvYmluZC1rZXlzCiAgICAgICAgLy89PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KICAgICAgICBkbnNzZWMtdmFsaWRhdGlvbiBhdXRvOwoKICAgICAgICBsaXN0ZW4tb24tdjYgeyBhbnk7IH07CiAgICAgIH07CgpydW5jbWQ6CiAgLSBzeXN0ZW1jdGwgcmVzdGFydCBiaW5kOQogIA==",
+    "vmObjectDNS": {
+      "nicName": "nic-dns-linux-",
+      "vmName": "vm-dns-linux-",
+      "vmSize": "[parameters('dnsLinuxVmSize')]",
+      "osProfile": {
+        "computerName": "LinuxDNS",
+        "adminUserName": "[parameters('adminUserName')]",
+        "adminPassword": "[parameters('adminPassword')]",
+        "customData": "[variables('dnsVMInitScript')]"
+      },
+      "imageReference": {
+        "publisher": "canonical",
+        "offer": "0001-com-ubuntu-server-focal",
+        "sku": "20_04-lts-gen2",
+        "version": "latest"
+      }
+    }
+  },
+  "resources": [
+    {
+      "copy": {
+        "name": "rgModule",
+        "count": "[length(variables('resourceGroupNames'))]",
+        "mode": "serial",
+        "batchSize": 1
+      },
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "[format('dpl-{0}-Sub-{1}', uniqueString(deployment().name, deployment().location), variables('resourceGroupNames')[copyIndex()])]",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "resourceGroupLocation": {
+            "value": "[parameters('resourceGroupLocation')]"
+          },
+          "resourceGroupName": {
+            "value": "[variables('resourceGroupNames')[copyIndex()]]"
+          },
+          "resourceTags": {
+            "value": "[parameters('resourceTags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1008.15138",
+              "templateHash": "8043208069981246833"
+            }
+          },
+          "parameters": {
+            "resourceGroupLocation": {
+              "type": "string"
+            },
+            "resourceTags": {
+              "type": "object"
+            },
+            "resourceGroupName": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Resources/resourceGroups",
+              "apiVersion": "2021-04-01",
+              "name": "[parameters('resourceGroupName')]",
+              "location": "[parameters('resourceGroupLocation')]",
+              "tags": "[parameters('resourceTags')]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "[format('dpl-{0}-dns-vm', uniqueString(deployment().name, parameters('resourceGroupLocation')))]",
+      "resourceGroup": "[variables('rgDNS')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "subnetId": {
+            "value": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Network/virtualNetworks', variables('vNetHubName')), parameters('dnsSubnetName'))]"
+          },
+          "vmObject": {
+            "value": "[variables('vmObjectDNS')]"
+          },
+          "tags": {
+            "value": "[parameters('resourceTags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1008.15138",
+              "templateHash": "1080711766590143088"
+            }
+          },
+          "parameters": {
+            "vmCount": {
+              "type": "int",
+              "defaultValue": 1
+            },
+            "vmObject": {
+              "type": "object"
+            },
+            "subnetId": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {}
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "copy": {
+                "name": "nicNameVMResource",
+                "count": "[length(range(0, parameters('vmCount')))]"
+              },
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-05-01",
+              "name": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+              "location": "[resourceGroup().location]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "copy": {
+                "name": "vmResource",
+                "count": "[length(range(0, parameters('vmCount')))]"
+              },
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2019-07-01",
+              "name": "[format('{0}{1}', parameters('vmObject').vmName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+              "location": "[resourceGroup().location]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmObject').vmSize]"
+                },
+                "osProfile": "[parameters('vmObject').osProfile]",
+                "storageProfile": {
+                  "imageReference": "[parameters('vmObject').imageReference]",
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)))]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "nicNameVMResource"
+              ]
+            }
+          ],
+          "outputs": {
+            "nicDetail": {
+              "type": "array",
+              "copy": {
+                "count": "[length(range(0, parameters('vmCount')))]",
+                "input": {
+                  "nicName": "[format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1))]",
+                  "privateIp": "[reference(format('{0}{1}', parameters('vmObject').nicName, add(range(0, parameters('vmCount'))[copyIndex()], 1)), '2020-05-01', 'Full').properties.ipConfigurations[0].properties.privateIPAddress]"
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "rgModule"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "[format('dpl-{0}-Update-DNS-Settings', uniqueString(deployment().name, deployment().location))]",
+      "resourceGroup": "[variables('rgDNS')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "fwName": {
+            "value": "[variables('azureFirewallName')]"
+          },
+          "dnsServerIp": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgDNS')), 'Microsoft.Resources/deployments', format('dpl-{0}-dns-vm', uniqueString(deployment().name, parameters('resourceGroupLocation')))), '2020-06-01').outputs.nicDetail.value[0].privateIp]"
+          },
+          "managedIdentityName": {
+            "value": "[variables('miName')]"
+          },
+          "vNetHub": {
+            "value": "[variables('vNetHubName')]"
+          },
+          "vNetSpoke01": {
+            "value": "[variables('vNetSpoke01')]"
+          },
+          "vNetSpoke02": {
+            "value": "[variables('vNetSpoke02')]"
+          },
+          "rgHub": {
+            "value": "[variables('rgHub')]"
+          },
+          "rgSpoke01": {
+            "value": "[variables('rgSpoke01')]"
+          },
+          "rgSpoke02": {
+            "value": "[variables('rgSpoke02')]"
+          },
+          "tags": {
+            "value": "[parameters('resourceTags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1008.15138",
+              "templateHash": "13484995712634152075"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {}
+            },
+            "vNetHub": {
+              "type": "string"
+            },
+            "vNetSpoke01": {
+              "type": "string"
+            },
+            "vNetSpoke02": {
+              "type": "string"
+            },
+            "rgHub": {
+              "type": "string"
+            },
+            "rgSpoke01": {
+              "type": "string"
+            },
+            "rgSpoke02": {
+              "type": "string"
+            },
+            "managedIdentityName": {
+              "type": "string"
+            },
+            "fwName": {
+              "type": "string"
+            },
+            "dnsServerIp": {
+              "type": "string"
+            },
+            "azureCliVersion": {
+              "type": "string",
+              "defaultValue": "2.30.0"
+            },
+            "currentTime": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2018-11-30",
+              "name": "[parameters('managedIdentityName')]",
+              "location": "[resourceGroup().location]",
+              "tags": "[parameters('tags')]"
+            },
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2019-10-01-preview",
+              "name": "updateFwVnetDns",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "kind": "AzureCLI",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')))]": {}
+                }
+              },
+              "properties": {
+                "azCliVersion": "[parameters('azureCliVersion')]",
+                "arguments": "[format('{0} {1} {2} {3} {4} {5} {6} {7} {8}', parameters('fwName'), parameters('rgHub'), parameters('dnsServerIp'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Network/azureFirewalls', parameters('fwName')), '2021-05-01').ipConfigurations[0].properties.privateIPAddress, parameters('vNetHub'), parameters('rgSpoke01'), parameters('vNetSpoke01'), parameters('rgSpoke02'), parameters('vNetSpoke02'))]",
+                "scriptContent": "    az extension add --name azure-firewall\n    az network firewall update --name $1 --resource-group $2 --dns-servers $3 --enable-dns-proxy true\n    az network vnet update --resource-group $2 --name $5 --dns-servers $4\n    az network vnet update --resource-group $6 --name $7 --dns-servers $4\n    az network vnet update --resource-group $8 --name $9 --dns-servers $4\n    ",
+                "cleanupPreference": "OnSuccess",
+                "retentionInterval": "P1D",
+                "forceUpdateTag": "[parameters('currentTime')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', format('dpl-{0}-RG-DNS-MI-Contrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-RG-Hub01-MI-NwContrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-RG-Spoke01-MI-NwContrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-RG-Spoke02-MI-NwContrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "[format('dpl-{0}-RG-DNS-MI-Contrib', uniqueString(deployment().name, parameters('location')))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "builtInRoleType": {
+                    "value": "Contributor"
+                  },
+                  "principalId": {
+                    "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))).principalId]"
+                  },
+                  "principalType": {
+                    "value": "ServicePrincipal"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "8862660433565026859"
+                    }
+                  },
+                  "parameters": {
+                    "principalId": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "builtInRoleType": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Built-in role to assign"
+                      },
+                      "allowedValues": [
+                        "Owner",
+                        "Contributor",
+                        "Reader",
+                        "NetworkContributor"
+                      ]
+                    },
+                    "roleNameGuid": {
+                      "type": "string",
+                      "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName, parameters('location'), resourceGroup().name)]",
+                      "metadata": {
+                        "description": "A new GUID used to identify the role assignment"
+                      }
+                    },
+                    "principalType": {
+                      "type": "string",
+                      "defaultValue": "ServicePrincipal",
+                      "allowedValues": [
+                        "User",
+                        "ServicePrincipal",
+                        "ForeignGroup",
+                        "Group"
+                      ]
+                    }
+                  },
+                  "functions": [],
+                  "variables": {
+                    "role": {
+                      "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
+                      "Contributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c', subscription().subscriptionId)]",
+                      "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]",
+                      "NetworkContributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7', subscription().subscriptionId)]"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2020-04-01-preview",
+                      "name": "[parameters('roleNameGuid')]",
+                      "properties": {
+                        "roleDefinitionId": "[variables('role')[parameters('builtInRoleType')]]",
+                        "principalId": "[parameters('principalId')]",
+                        "principalType": "[parameters('principalType')]"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "[format('dpl-{0}-RG-Hub01-MI-NwContrib', uniqueString(deployment().name, parameters('location')))]",
+              "resourceGroup": "[parameters('rgHub')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "builtInRoleType": {
+                    "value": "NetworkContributor"
+                  },
+                  "principalId": {
+                    "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))).principalId]"
+                  },
+                  "principalType": {
+                    "value": "ServicePrincipal"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "8862660433565026859"
+                    }
+                  },
+                  "parameters": {
+                    "principalId": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "builtInRoleType": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Built-in role to assign"
+                      },
+                      "allowedValues": [
+                        "Owner",
+                        "Contributor",
+                        "Reader",
+                        "NetworkContributor"
+                      ]
+                    },
+                    "roleNameGuid": {
+                      "type": "string",
+                      "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName, parameters('location'), resourceGroup().name)]",
+                      "metadata": {
+                        "description": "A new GUID used to identify the role assignment"
+                      }
+                    },
+                    "principalType": {
+                      "type": "string",
+                      "defaultValue": "ServicePrincipal",
+                      "allowedValues": [
+                        "User",
+                        "ServicePrincipal",
+                        "ForeignGroup",
+                        "Group"
+                      ]
+                    }
+                  },
+                  "functions": [],
+                  "variables": {
+                    "role": {
+                      "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
+                      "Contributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c', subscription().subscriptionId)]",
+                      "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]",
+                      "NetworkContributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7', subscription().subscriptionId)]"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2020-04-01-preview",
+                      "name": "[parameters('roleNameGuid')]",
+                      "properties": {
+                        "roleDefinitionId": "[variables('role')[parameters('builtInRoleType')]]",
+                        "principalId": "[parameters('principalId')]",
+                        "principalType": "[parameters('principalType')]"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', format('dpl-{0}-RG-DNS-MI-Contrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "[format('dpl-{0}-RG-Spoke01-MI-NwContrib', uniqueString(deployment().name, parameters('location')))]",
+              "resourceGroup": "[parameters('rgSpoke01')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "builtInRoleType": {
+                    "value": "NetworkContributor"
+                  },
+                  "principalId": {
+                    "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))).principalId]"
+                  },
+                  "principalType": {
+                    "value": "ServicePrincipal"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "8862660433565026859"
+                    }
+                  },
+                  "parameters": {
+                    "principalId": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "builtInRoleType": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Built-in role to assign"
+                      },
+                      "allowedValues": [
+                        "Owner",
+                        "Contributor",
+                        "Reader",
+                        "NetworkContributor"
+                      ]
+                    },
+                    "roleNameGuid": {
+                      "type": "string",
+                      "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName, parameters('location'), resourceGroup().name)]",
+                      "metadata": {
+                        "description": "A new GUID used to identify the role assignment"
+                      }
+                    },
+                    "principalType": {
+                      "type": "string",
+                      "defaultValue": "ServicePrincipal",
+                      "allowedValues": [
+                        "User",
+                        "ServicePrincipal",
+                        "ForeignGroup",
+                        "Group"
+                      ]
+                    }
+                  },
+                  "functions": [],
+                  "variables": {
+                    "role": {
+                      "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
+                      "Contributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c', subscription().subscriptionId)]",
+                      "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]",
+                      "NetworkContributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7', subscription().subscriptionId)]"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2020-04-01-preview",
+                      "name": "[parameters('roleNameGuid')]",
+                      "properties": {
+                        "roleDefinitionId": "[variables('role')[parameters('builtInRoleType')]]",
+                        "principalId": "[parameters('principalId')]",
+                        "principalType": "[parameters('principalType')]"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-RG-Hub01-MI-NwContrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-06-01",
+              "name": "[format('dpl-{0}-RG-Spoke02-MI-NwContrib', uniqueString(deployment().name, parameters('location')))]",
+              "resourceGroup": "[parameters('rgSpoke02')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "builtInRoleType": {
+                    "value": "NetworkContributor"
+                  },
+                  "principalId": {
+                    "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))).principalId]"
+                  },
+                  "principalType": {
+                    "value": "ServicePrincipal"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1008.15138",
+                      "templateHash": "8862660433565026859"
+                    }
+                  },
+                  "parameters": {
+                    "principalId": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "builtInRoleType": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Built-in role to assign"
+                      },
+                      "allowedValues": [
+                        "Owner",
+                        "Contributor",
+                        "Reader",
+                        "NetworkContributor"
+                      ]
+                    },
+                    "roleNameGuid": {
+                      "type": "string",
+                      "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName, parameters('location'), resourceGroup().name)]",
+                      "metadata": {
+                        "description": "A new GUID used to identify the role assignment"
+                      }
+                    },
+                    "principalType": {
+                      "type": "string",
+                      "defaultValue": "ServicePrincipal",
+                      "allowedValues": [
+                        "User",
+                        "ServicePrincipal",
+                        "ForeignGroup",
+                        "Group"
+                      ]
+                    }
+                  },
+                  "functions": [],
+                  "variables": {
+                    "role": {
+                      "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
+                      "Contributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c', subscription().subscriptionId)]",
+                      "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]",
+                      "NetworkContributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7', subscription().subscriptionId)]"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2020-04-01-preview",
+                      "name": "[parameters('roleNameGuid')]",
+                      "properties": {
+                        "roleDefinitionId": "[variables('role')[parameters('builtInRoleType')]]",
+                        "principalId": "[parameters('principalId')]",
+                        "principalType": "[parameters('principalType')]"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-RG-Spoke01-MI-NwContrib', uniqueString(deployment().name, parameters('location'))))]",
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "scriptLogs": {
+              "type": "string",
+              "value": "[reference(format('{0}/logs/default', resourceId('Microsoft.Resources/deploymentScripts', 'updateFwVnetDns')), '2019-10-01-preview', 'Full').properties.log]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgDNS')), 'Microsoft.Resources/deployments', format('dpl-{0}-dns-vm', uniqueString(deployment().name, parameters('resourceGroupLocation'))))]"
+      ]
+    }
+  ]
+}

@@ -2,8 +2,10 @@
 Purpose : Main Deployment File
 Author  : Darko Mocelj
 Date    : 25.11.2021
-Update  : 13.01.2022
-Comments: Still work in progress...
+Update  : 27.01.2022
+Comments: 
+-- 12.01.2022: Initial Release
+-- 27.01.2022: Added Demo 3: Depoly own DNS Server and Update FW as DNS Proxy for VNets
 */
 
 
@@ -179,198 +181,197 @@ var vNetHubObject  = {
   positionJumpBox: 3
   positionDNS: 4
   subnets: [
-    
-      {
-        vNetName: 'vnet-${environment}-${prefix}-hub-01'
-        subnetName: 'GatewaySubnet'
-        SubnetAddressSpace: '10.1.1.0/24'
-        serviceEndpoints: []
-        nsgToAttach: 'None'
-        securityRules: []
-        rtToAttach: 'None'
-        routes: []
-        privateEndpointNetworkPolicies: 'Enabled'
-        PrivateLinkServiceNetworkPolicies: 'Enabled'
-      }
-      {
-        vNetName: 'vnet-${environment}-${prefix}-hub-01'
-        subnetName: 'AzureFirewallSubnet'
-        SubnetAddressSpace: '10.1.2.0/24'
-        serviceEndpoints: []
-        nsgToAttach: 'None'
-        securityRules: []
-        rtToAttach: 'None'
-        routes: []
-        privateEndpointNetworkPolicies: 'Enabled'
-        PrivateLinkServiceNetworkPolicies: 'Enabled'
-      }
-      {
-        vNetName: 'vnet-${environment}-${prefix}-hub-01'
-        subnetName: 'AzureBastionSubnet'
-        SubnetAddressSpace: '10.1.3.0/24'
-        serviceEndpoints: []
-        nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-AzureBastionSubnet-nsg'
-        securityRules: [
-          {
-            name: 'bastion-in-allow'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix: 'Internet'
-              destinationPortRange: '443'
-              destinationAddressPrefix: '*'
-              access: 'Allow'
-              priority: 100
-              direction: 'Inbound'
-            }
+    {
+      vNetName: 'vnet-${environment}-${prefix}-hub-01'
+      subnetName: 'GatewaySubnet'
+      SubnetAddressSpace: '10.1.1.0/24'
+      serviceEndpoints: []
+      nsgToAttach: 'None'
+      securityRules: []
+      rtToAttach: 'None'
+      routes: []
+      privateEndpointNetworkPolicies: 'Enabled'
+      PrivateLinkServiceNetworkPolicies: 'Enabled'
+    }
+    {
+      vNetName: 'vnet-${environment}-${prefix}-hub-01'
+      subnetName: 'AzureFirewallSubnet'
+      SubnetAddressSpace: '10.1.2.0/24'
+      serviceEndpoints: []
+      nsgToAttach: 'None'
+      securityRules: []
+      rtToAttach: 'None'
+      routes: []
+      privateEndpointNetworkPolicies: 'Enabled'
+      PrivateLinkServiceNetworkPolicies: 'Enabled'
+    }
+    {
+      vNetName: 'vnet-${environment}-${prefix}-hub-01'
+      subnetName: 'AzureBastionSubnet'
+      SubnetAddressSpace: '10.1.3.0/24'
+      serviceEndpoints: []
+      nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-AzureBastionSubnet-nsg'
+      securityRules: [
+        {
+          name: 'bastion-in-allow'
+          properties: {
+            protocol: 'Tcp'
+            sourcePortRange: '*'
+            sourceAddressPrefix: 'Internet'
+            destinationPortRange: '443'
+            destinationAddressPrefix: '*'
+            access: 'Allow'
+            priority: 100
+            direction: 'Inbound'
           }
-          {
-            name: 'bastion-control-in-allow'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix: 'GatewayManager'
-              destinationPortRange: '443'
-              destinationAddressPrefix: '*'
-              access: 'Allow'
-              priority: 120
-              direction: 'Inbound'
-            }
+        }
+        {
+          name: 'bastion-control-in-allow'
+          properties: {
+            protocol: 'Tcp'
+            sourcePortRange: '*'
+            sourceAddressPrefix: 'GatewayManager'
+            destinationPortRange: '443'
+            destinationAddressPrefix: '*'
+            access: 'Allow'
+            priority: 120
+            direction: 'Inbound'
           }
-          {
-            name: 'bastion-in-host'
-            properties: {
-              protocol: '*'
-              sourcePortRange: '*'
-              destinationPortRanges: [
-                '8080'
-                '5701'
-              ]
-              sourceAddressPrefix: 'VirtualNetwork'
-              destinationAddressPrefix: 'VirtualNetwork'
-              access: 'Allow'
-              priority: 130
-              direction: 'Inbound'
-            }
+        }
+        {
+          name: 'bastion-in-host'
+          properties: {
+            protocol: '*'
+            sourcePortRange: '*'
+            destinationPortRanges: [
+              '8080'
+              '5701'
+            ]
+            sourceAddressPrefix: 'VirtualNetwork'
+            destinationAddressPrefix: 'VirtualNetwork'
+            access: 'Allow'
+            priority: 130
+            direction: 'Inbound'
           }
-          {
-            name: 'bastion-vnet-out-allow'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix: '*'
-              destinationPortRanges: [
-                '22'
-                '3389'
-              ]
-              destinationAddressPrefix: 'VirtualNetwork'
-              access: 'Allow'
-              priority: 100
-              direction: 'Outbound'
-            }
+        }
+        {
+          name: 'bastion-vnet-out-allow'
+          properties: {
+            protocol: 'Tcp'
+            sourcePortRange: '*'
+            sourceAddressPrefix: '*'
+            destinationPortRanges: [
+              '22'
+              '3389'
+            ]
+            destinationAddressPrefix: 'VirtualNetwork'
+            access: 'Allow'
+            priority: 100
+            direction: 'Outbound'
           }
-          {
-            name: 'bastion-azure-out-allow'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix: '*'
-              destinationPortRange: '443'
-              destinationAddressPrefix: 'AzureCloud'
-              access: 'Allow'
-              priority: 120
-              direction: 'Outbound'
-            }
+        }
+        {
+          name: 'bastion-azure-out-allow'
+          properties: {
+            protocol: 'Tcp'
+            sourcePortRange: '*'
+            sourceAddressPrefix: '*'
+            destinationPortRange: '443'
+            destinationAddressPrefix: 'AzureCloud'
+            access: 'Allow'
+            priority: 120
+            direction: 'Outbound'
           }
-          {
-            name: 'bastion-out-host'
-            properties: {
-              protocol: '*'
-              sourcePortRange: '*'
-              destinationPortRanges: [
-                '8080'
-                '5701'
-              ]
-              sourceAddressPrefix: 'VirtualNetwork'
-              destinationAddressPrefix: 'VirtualNetwork'
-              access: 'Allow'
-              priority: 130
-              direction: 'Outbound'
-            }
+        }
+        {
+          name: 'bastion-out-host'
+          properties: {
+            protocol: '*'
+            sourcePortRange: '*'
+            destinationPortRanges: [
+              '8080'
+              '5701'
+            ]
+            sourceAddressPrefix: 'VirtualNetwork'
+            destinationAddressPrefix: 'VirtualNetwork'
+            access: 'Allow'
+            priority: 130
+            direction: 'Outbound'
           }
-          {
-            name: 'bastion-out-deny'
-            properties: {
-              protocol: '*'
-              sourcePortRange: '*'
-              destinationPortRange: '*'
-              sourceAddressPrefix: '*'
-              destinationAddressPrefix: '*'
-              access: 'Deny'
-              priority: 1000
-              direction: 'Outbound'
-            }
+        }
+        {
+          name: 'bastion-out-deny'
+          properties: {
+            protocol: '*'
+            sourcePortRange: '*'
+            destinationPortRange: '*'
+            sourceAddressPrefix: '*'
+            destinationAddressPrefix: '*'
+            access: 'Deny'
+            priority: 1000
+            direction: 'Outbound'
           }
-        ]
-        rtToAttach: 'None'
-        routes: []
-        privateEndpointNetworkPolicies: 'Enabled'
-        PrivateLinkServiceNetworkPolicies: 'Enabled'
-      }
-      {
-        vNetName: 'vnet-${environment}-${prefix}-hub-01'
-        subnetName: 'snet-Jumpbox'
-        SubnetAddressSpace: '10.1.4.0/24'
-        serviceEndpoints: []
-        nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-snetJumpbox-nsg'
-        securityRules: [
-          {
-            name: 'bastion-in-vnet'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix:  '10.1.3.0/24'
-              destinationPortRanges: [
-                '22'
-                '3389'
-              ]
-              destinationAddressPrefix: '*'
-              access: 'Allow'
-              priority: 100
-              direction: 'Inbound'
-            }
+        }
+      ]
+      rtToAttach: 'None'
+      routes: []
+      privateEndpointNetworkPolicies: 'Enabled'
+      PrivateLinkServiceNetworkPolicies: 'Enabled'
+    }
+    {
+      vNetName: 'vnet-${environment}-${prefix}-hub-01'
+      subnetName: 'snet-Jumpbox'
+      SubnetAddressSpace: '10.1.4.0/24'
+      serviceEndpoints: []
+      nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-snetJumpbox-nsg'
+      securityRules: [
+        {
+          name: 'bastion-in-vnet'
+          properties: {
+            protocol: 'Tcp'
+            sourcePortRange: '*'
+            sourceAddressPrefix:  '10.1.3.0/24'
+            destinationPortRanges: [
+              '22'
+              '3389'
+            ]
+            destinationAddressPrefix: '*'
+            access: 'Allow'
+            priority: 100
+            direction: 'Inbound'
           }
-          {
-            name: 'DenyAllInBound'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix: '*'
-              destinationPortRange: '443'
-              destinationAddressPrefix: '*'
-              access: 'Deny'
-              priority: 1000
-              direction: 'Inbound'
-            }
+        }
+        {
+          name: 'DenyAllInBound'
+          properties: {
+            protocol: 'Tcp'
+            sourcePortRange: '*'
+            sourceAddressPrefix: '*'
+            destinationPortRange: '443'
+            destinationAddressPrefix: '*'
+            access: 'Deny'
+            priority: 1000
+            direction: 'Inbound'
           }
-        ]
-        rtToAttach: 'vnet-${environment}-${prefix}-hub-01-snetJumpbox-rt'
-        routes: []
-        privateEndpointNetworkPolicies: 'Enabled'
-        PrivateLinkServiceNetworkPolicies: 'Enabled'
-      }
-      {
-        vNetName: 'vnet-${environment}-${prefix}-hub-01'
-        subnetName: 'snet-dns'
-        SubnetAddressSpace: '10.1.5.0/24'
-        serviceEndpoints: []
-        nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-dns-nsg'
-        securityRules: []
-        rtToAttach: 'None'
-        routes: []
-        privateEndpointNetworkPolicies: 'Enabled'
-        PrivateLinkServiceNetworkPolicies: 'Enabled'
-      } 
+        }
+      ]
+      rtToAttach: 'vnet-${environment}-${prefix}-hub-01-snetJumpbox-rt'
+      routes: []
+      privateEndpointNetworkPolicies: 'Enabled'
+      PrivateLinkServiceNetworkPolicies: 'Enabled'
+    }
+    {
+      vNetName: 'vnet-${environment}-${prefix}-hub-01'
+      subnetName: 'snet-dns'
+      SubnetAddressSpace: '10.1.5.0/24'
+      serviceEndpoints: []
+      nsgToAttach: 'vnet-${environment}-${prefix}-hub-01-dns-nsg'
+      securityRules: []
+      rtToAttach: 'None'
+      routes: []
+      privateEndpointNetworkPolicies: 'Enabled'
+      PrivateLinkServiceNetworkPolicies: 'Enabled'
+    } 
   ]
 }
 
@@ -1002,6 +1003,7 @@ var fwApplicationRuleCollections = [
 
 var linuxVmInitScriptRaw = loadTextContent('./modules/virtualMachines/linux-vm-init-script.sh')
 var linuxVmInitScript = format(linuxVmInitScriptRaw,saNameStorageNFS,'container')
+
 var vmObjectJumpbox  = {
   nicName: 'nic-jumpbox-linux-'
   vmName: 'vm-jumpbox-linux-'
@@ -1195,7 +1197,7 @@ module logAnalyticsWorkspace './modules/logAnalytics/logAnalytics.bicep' = {
   ]
 }
 
-//--------------------------- Deploy Application Insights  -------------------------------------------------------------- 
+//--------------------------- Deploy Application Insights -------------------------------------------------------------- 
 
 var appInsightsName = 'appi-${environment}-${prefix}-${uniqueString(subscription().subscriptionId,('rg-${prefix}-vnet-hub-01'))}'
 
@@ -1212,7 +1214,7 @@ module appInsights './modules/appInsights/deploy.bicep' = {
   ]
 }
 
-//--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion) -----------------------
+//--------------------------- Deploy the Hub-Spoke VNET (incl. FW, Log Analytics Workspace, Bastion) -------------------
 
 module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deployHubSpoke) {
   scope: subscription()
@@ -1240,8 +1242,6 @@ module hubSpokeNetwork './modules/networking/hubSpokeNetwork.bicep' = if (deploy
     logAnalyticsWorkspace
   ]
 }
-
-
 
 //---------------------------  Deploy the VPN Gateway to the Hub Network --------------------------------------------------
 
