@@ -151,9 +151,6 @@ param jumpboxWindowsVmSize string = 'Standard_D4_v5'
 @description('Get the Batch Service Object Id: az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv')
 param batchServiceObjectId string 
 
-@description('Select true if Batch Service has not been gratned contributor permissions.')
-param assignBatchServiceRoles bool = true
-
 @allowed([ 
   'Standard_D2s_V3'
   'Standard_D2s_V4'
@@ -1296,7 +1293,6 @@ module deployDemoAzureBatchSecured './modules/Demos/Demo-Batch-Secured/demoAzure
     primaryScriptBuildKvTestImage: primaryScriptBuildKvTestImage
     batchAccountName: batchAccountName
     batchServiceObjectId: batchServiceObjectId
-    assignBatchServiceRoles: assignBatchServiceRoles
     batchNodeSku: batchNodeSku
     saNameStorageNFS: saNameStorageNFS
     saNameStorageSMB: saNameStorageSMB
