@@ -35,7 +35,7 @@ param deployPrivateAKV bool = true
 
 // Azure Batch
 
-// az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv
+@description('Get the Batch Service Object Id: az ad sp show --id "MicrosoftAzureBatch" --query id -o tsv')
 param batchServiceObjectId string
 
 param assignBatchServiceRoles bool
