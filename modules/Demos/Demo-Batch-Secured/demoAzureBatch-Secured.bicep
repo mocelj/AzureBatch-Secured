@@ -38,8 +38,6 @@ param deployPrivateAKV bool = true
 // az ad sp show --id "MicrosoftAzureBatch" --query objectId -o tsv
 param batchServiceObjectId string
 
-param assignBatchServiceRoles bool
-
 param batchAccountName string
 
 param batchNodeSku string
@@ -73,11 +71,21 @@ resource appInsightsRef 'Microsoft.Insights/components@2020-02-02' existing = {
 }
 var appInsightsInstrumentKey = appInsightsRef.properties.InstrumentationKey
 var appInsightsAppId = appInsightsRef.properties.ApplicationId
-module deployBatchRoleAssignment '../../../modules/azRoles/roleAssignmentSubscription.bicep' = if (assignBatchServiceRoles) {
+
+module deployTestBatchRoleAssignment '../../../modules/azRoles/testRoleAssignmentSubscription.bicep' = {
+  name: 'dpl-${uniqueString(deployment().name, location)}-testBatchRoleAssignment'
+  params: {
+    principalId: batchServiceObjectId
+    roleDefinitionName: 'Contributor'
+    location: location
+  }
+}
+module deployBatchRoleAssignment '../../../modules/azRoles/roleAssignmentSubscription.bicep' = {
   name: 'dpl-${uniqueString(deployment().name,location)}-batchRoleAssignment'
   params: {
     builtInRoleType: 'Contributor'
     principalId: batchServiceObjectId
+    roleAssignmentExists: deployTestBatchRoleAssignment.outputs.result
   }
   scope: subscription()
 }

@@ -45,9 +45,6 @@
     "jumpboxWindowsVmSize": {
       "value": "Standard_D4_v5"
     },
-    "assignBatchServiceRoles": {
-      "value": false
-    },
     "batchNodeSku": {
       "value": "Standard_D2s_V3"
     },

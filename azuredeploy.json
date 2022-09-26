@@ -3,9 +3,9 @@
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
-      "name": "bicep (Bicep PowerShell 2.1.0)",
-      "version": "0.4.1008.15138",
-      "templateHash": "14939649316618798050"
+      "name": "bicep",
+      "version": "0.10.61.36676",
+      "templateHash": "639831193419886208"
     }
   },
   "parameters": {
@@ -128,13 +128,6 @@
         "description": "Get the Batch Service Object Id: az ad sp show --id \"MicrosoftAzureBatch\" --query objectId -o tsv"
       }
     },
-    "assignBatchServiceRoles": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Select true if Batch Service has not been gratned contributor permissions."
-      }
-    },
     "batchNodeSku": {
       "type": "string",
       "defaultValue": "Standard_D2s_V3",
@@ -181,7 +174,6 @@
       "defaultValue": "https://raw.githubusercontent.com/mocelj/AzureBatch-Secured/main/artefacts/checkAkv/buildRemoteContainer.sh"
     }
   },
-  "functions": [],
   "variables": {
     "pipFirewallName": "[format('pip-{0}-{1}-fw-vnet-hub-01', parameters('environment'), parameters('prefix'))]",
     "pipBastionName": "[format('pip-{0}-{1}-bas-vnet-hub-01', parameters('environment'), parameters('prefix'))]",
@@ -1136,7 +1128,7 @@
         "batchSize": 1
       },
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-Sub-{1}', uniqueString(deployment().name, deployment().location), variables('resourceGroupNames')[copyIndex()])]",
       "location": "[deployment().location]",
       "properties": {
@@ -1161,8 +1153,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "8043208069981246833"
+              "version": "0.10.61.36676",
+              "templateHash": "7139188142350928998"
             }
           },
           "parameters": {
@@ -1176,7 +1168,6 @@
               "type": "string"
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.Resources/resourceGroups",
@@ -1191,7 +1182,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location))]",
       "resourceGroup": "[variables('rgHub')]",
       "properties": {
@@ -1213,8 +1204,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "12209250017223031281"
+              "version": "0.10.61.36676",
+              "templateHash": "15361124388189105755"
             }
           },
           "parameters": {
@@ -1229,7 +1220,6 @@
               "type": "object"
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.OperationalInsights/workspaces",
@@ -1258,7 +1248,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-appInsights', uniqueString(deployment().name, deployment().location))]",
       "resourceGroup": "[variables('rgHub')]",
       "properties": {
@@ -1268,7 +1258,7 @@
         "mode": "Incremental",
         "parameters": {
           "appInsightsWorkspaceResourceId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.id.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location)))).outputs.id.value]"
           },
           "name": {
             "value": "[variables('appInsightsName')]"
@@ -1283,8 +1273,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "1921306243224793272"
+              "version": "0.10.61.36676",
+              "templateHash": "3640648420746395880"
             }
           },
           "parameters": {
@@ -1369,7 +1359,6 @@
               }
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.Insights/components",
@@ -1388,7 +1377,7 @@
             {
               "condition": "[not(empty(parameters('cuaId')))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('pid-{0}', parameters('cuaId'))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -1402,11 +1391,10 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "14669053462841078328"
+                      "version": "0.10.61.36676",
+                      "templateHash": "4193470495622901480"
                     }
                   },
-                  "functions": [],
                   "resources": []
                 }
               }
@@ -1417,7 +1405,7 @@
                 "count": "[length(parameters('roleAssignments'))]"
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('{0}-AppInsights-Rbac-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -1441,8 +1429,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "14012549253015338451"
+                      "version": "0.10.61.36676",
+                      "templateHash": "13858939094356364755"
                     }
                   },
                   "parameters": {
@@ -1456,7 +1444,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "builtInRoleNames": {
                       "Owner": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
@@ -1534,7 +1521,7 @@
     {
       "condition": "[parameters('deployHubSpoke')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-hubSpoke', uniqueString(deployment().name, deployment().location))]",
       "location": "[deployment().location]",
       "properties": {
@@ -1568,7 +1555,7 @@
             "value": "[variables('vNetSpoke02Param')]"
           },
           "logAnalyticsWorkspaceId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.id.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-logAnalytics', uniqueString(deployment().name, deployment().location)))).outputs.id.value]"
           },
           "azureFirewallName": {
             "value": "[variables('azureFirewallName')]"
@@ -1598,8 +1585,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "3564730688439317127"
+              "version": "0.10.61.36676",
+              "templateHash": "8470180889693258761"
             }
           },
           "parameters": {
@@ -1657,11 +1644,10 @@
               "defaultValue": false
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgHub')]",
               "properties": {
@@ -1707,8 +1693,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "13620916698306060574"
+                      "version": "0.10.61.36676",
+                      "templateHash": "16581223250272271812"
                     }
                   },
                   "parameters": {
@@ -1750,11 +1736,10 @@
                       "defaultValue": "[resourceGroup().location]"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-pip-fw', uniqueString(deployment().name, parameters('location')))]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -1776,8 +1761,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "15240509609852175121"
+                              "version": "0.10.61.36676",
+                              "templateHash": "16649564108942475401"
                             }
                           },
                           "parameters": {
@@ -1797,7 +1782,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/publicIPAddresses",
@@ -1828,7 +1812,7 @@
                     },
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-pip-bastion', uniqueString(deployment().name, parameters('location')))]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -1850,8 +1834,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "15240509609852175121"
+                              "version": "0.10.61.36676",
+                              "templateHash": "16649564108942475401"
                             }
                           },
                           "parameters": {
@@ -1871,7 +1855,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/publicIPAddresses",
@@ -1902,7 +1885,7 @@
                     },
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location')))]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -1924,8 +1907,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "4241096623126947357"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1135338002588638283"
                             }
                           },
                           "parameters": {
@@ -1937,7 +1920,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/virtualNetworks",
@@ -1983,7 +1965,7 @@
                     },
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location')))]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -2002,10 +1984,10 @@
                             "value": "[parameters('azureFirewallName')]"
                           },
                           "azureFirwallSubnetId": {
-                            "value": "[format('{0}/subnets/{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.vNetId.value, parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionFirewall].subnetName)]"
+                            "value": "[format('{0}/subnets/{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location'))))).outputs.vNetId.value, parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionFirewall].subnetName)]"
                           },
                           "publicIpAddressId": {
-                            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-pip-fw', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.pipId.value]"
+                            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-pip-fw', uniqueString(deployment().name, parameters('location'))))).outputs.pipId.value]"
                           }
                         },
                         "template": {
@@ -2014,8 +1996,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "5567577792666906290"
+                              "version": "0.10.61.36676",
+                              "templateHash": "85573317028304744"
                             }
                           },
                           "parameters": {
@@ -2057,7 +2039,6 @@
                               "defaultValue": "Alert"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/azureFirewalls",
@@ -2131,7 +2112,7 @@
                     },
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-bastion', uniqueString(deployment().name, parameters('location')))]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -2141,10 +2122,10 @@
                         "mode": "Incremental",
                         "parameters": {
                           "bastionSubnetId": {
-                            "value": "[format('{0}/subnets/{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.vNetId.value, parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionBastion].subnetName)]"
+                            "value": "[format('{0}/subnets/{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location'))))).outputs.vNetId.value, parameters('vNetHubObject').subnets[parameters('vNetHubObject').positionBastion].subnetName)]"
                           },
                           "publicIpAddressId": {
-                            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-pip-bastion', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.pipId.value]"
+                            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-pip-bastion', uniqueString(deployment().name, parameters('location'))))).outputs.pipId.value]"
                           },
                           "bastionName": {
                             "value": "[parameters('bastionName')]"
@@ -2159,8 +2140,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "12583800693142158043"
+                              "version": "0.10.61.36676",
+                              "templateHash": "10883525406927766509"
                             }
                           },
                           "parameters": {
@@ -2179,7 +2160,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/bastionHosts",
@@ -2218,7 +2198,7 @@
                         "count": "[length(parameters('vNetHubObject').subnets)]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-RT-vNet-Hub-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetHubObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -2231,7 +2211,7 @@
                             "value": "[parameters('vNetHubObject').subnets[copyIndex()].rtToAttach]"
                           },
                           "routes": {
-                            "value": "[if(empty(createArray(createObject('name', 'Default', 'properties', createObject('addressPrefix', '0.0.0.0/0', 'nextHopType', 'VirtualAppliance', 'nextHopIpAddress', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.fwPrivateIpAddress.value)))), parameters('vNetHubObject').subnets[copyIndex()].routes, union(parameters('vNetHubObject').subnets[copyIndex()].routes, createArray(createObject('name', 'Default', 'properties', createObject('addressPrefix', '0.0.0.0/0', 'nextHopType', 'VirtualAppliance', 'nextHopIpAddress', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.fwPrivateIpAddress.value)))))]"
+                            "value": "[if(empty(createArray(createObject('name', 'Default', 'properties', createObject('addressPrefix', '0.0.0.0/0', 'nextHopType', 'VirtualAppliance', 'nextHopIpAddress', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location'))))).outputs.fwPrivateIpAddress.value)))), parameters('vNetHubObject').subnets[copyIndex()].routes, union(parameters('vNetHubObject').subnets[copyIndex()].routes, createArray(createObject('name', 'Default', 'properties', createObject('addressPrefix', '0.0.0.0/0', 'nextHopType', 'VirtualAppliance', 'nextHopIpAddress', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location'))))).outputs.fwPrivateIpAddress.value)))))]"
                           },
                           "tags": {
                             "value": "[parameters('tags')]"
@@ -2243,8 +2223,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "619857631352727435"
+                              "version": "0.10.61.36676",
+                              "templateHash": "8857908103978307514"
                             }
                           },
                           "parameters": {
@@ -2264,7 +2244,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/routeTables",
@@ -2298,7 +2277,7 @@
                         "count": "[length(parameters('vNetHubObject').subnets)]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-NSG-vNet-Hub-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetHubObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -2326,8 +2305,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "17182864887894976464"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1805279730060917740"
                             }
                           },
                           "parameters": {
@@ -2346,7 +2325,6 @@
                               "defaultValue": ""
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/networkSecurityGroups",
@@ -2403,7 +2381,7 @@
                         "batchSize": 1
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-Attach-vNet-Hub-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetHubObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgHub')]",
                       "properties": {
@@ -2443,8 +2421,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "2689004932160573512"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1493134657072870144"
                             }
                           },
                           "parameters": {
@@ -2476,7 +2454,6 @@
                               "type": "array"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/virtualNetworks/subnets",
@@ -2504,19 +2481,19 @@
                   "outputs": {
                     "fwPublicIpAddress": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-pip-fw', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.pipIp.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-pip-fw', uniqueString(deployment().name, parameters('location'))))).outputs.pipIp.value]"
                     },
                     "vNetName": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.vNetName.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location'))))).outputs.vNetName.value]"
                     },
                     "vNetId": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.vNetId.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vNet-Hub', uniqueString(deployment().name, parameters('location'))))).outputs.vNetId.value]"
                     },
                     "fwPrivateIpAddress": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location')))), '2020-06-01').outputs.fwPrivateIpAddress.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-fw', uniqueString(deployment().name, parameters('location'))))).outputs.fwPrivateIpAddress.value]"
                     }
                   }
                 }
@@ -2524,7 +2501,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgSpoke01')]",
               "properties": {
@@ -2534,7 +2511,7 @@
                 "mode": "Incremental",
                 "parameters": {
                   "fwRouteNextHopIpAddress": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.fwPrivateIpAddress.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.fwPrivateIpAddress.value]"
                   },
                   "logAnalyticsWorkspaceId": {
                     "value": "[parameters('logAnalyticsWorkspaceId')]"
@@ -2555,8 +2532,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "11224811861457604036"
+                      "version": "0.10.61.36676",
+                      "templateHash": "4141130034366007347"
                     }
                   },
                   "parameters": {
@@ -2581,7 +2558,6 @@
                       "defaultValue": "[resourceGroup().location]"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "fwRoutes": [
                       {
@@ -2597,7 +2573,7 @@
                   "resources": [
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -2619,8 +2595,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "4241096623126947357"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1135338002588638283"
                             }
                           },
                           "parameters": {
@@ -2632,7 +2608,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/virtualNetworks",
@@ -2683,7 +2658,7 @@
                         "count": "[length(parameters('vNetObject').subnets)]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-RT-spoke-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -2708,8 +2683,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "619857631352727435"
+                              "version": "0.10.61.36676",
+                              "templateHash": "8857908103978307514"
                             }
                           },
                           "parameters": {
@@ -2729,7 +2704,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/routeTables",
@@ -2762,7 +2736,7 @@
                         "count": "[length(parameters('vNetObject').subnets)]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-NSG-spoke-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -2790,8 +2764,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "17182864887894976464"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1805279730060917740"
                             }
                           },
                           "parameters": {
@@ -2810,7 +2784,6 @@
                               "defaultValue": ""
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/networkSecurityGroups",
@@ -2867,7 +2840,7 @@
                         "batchSize": 1
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-attach-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -2907,8 +2880,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "2689004932160573512"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1493134657072870144"
                             }
                           },
                           "parameters": {
@@ -2940,7 +2913,6 @@
                               "type": "array"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/virtualNetworks/subnets",
@@ -2968,11 +2940,11 @@
                   "outputs": {
                     "vNetName": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName)), '2020-06-01').outputs.vNetName.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName))).outputs.vNetName.value]"
                     },
                     "vNetId": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName)), '2020-06-01').outputs.vNetId.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName))).outputs.vNetId.value]"
                     }
                   }
                 }
@@ -2983,7 +2955,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgSpoke02')]",
               "properties": {
@@ -2993,7 +2965,7 @@
                 "mode": "Incremental",
                 "parameters": {
                   "fwRouteNextHopIpAddress": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.fwPrivateIpAddress.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.fwPrivateIpAddress.value]"
                   },
                   "logAnalyticsWorkspaceId": {
                     "value": "[parameters('logAnalyticsWorkspaceId')]"
@@ -3014,8 +2986,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "11224811861457604036"
+                      "version": "0.10.61.36676",
+                      "templateHash": "4141130034366007347"
                     }
                   },
                   "parameters": {
@@ -3040,7 +3012,6 @@
                       "defaultValue": "[resourceGroup().location]"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "fwRoutes": [
                       {
@@ -3056,7 +3027,7 @@
                   "resources": [
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -3078,8 +3049,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "4241096623126947357"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1135338002588638283"
                             }
                           },
                           "parameters": {
@@ -3091,7 +3062,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/virtualNetworks",
@@ -3142,7 +3112,7 @@
                         "count": "[length(parameters('vNetObject').subnets)]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-RT-spoke-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -3167,8 +3137,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "619857631352727435"
+                              "version": "0.10.61.36676",
+                              "templateHash": "8857908103978307514"
                             }
                           },
                           "parameters": {
@@ -3188,7 +3158,6 @@
                               "defaultValue": {}
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/routeTables",
@@ -3221,7 +3190,7 @@
                         "count": "[length(parameters('vNetObject').subnets)]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-NSG-spoke-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -3249,8 +3218,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "17182864887894976464"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1805279730060917740"
                             }
                           },
                           "parameters": {
@@ -3269,7 +3238,6 @@
                               "defaultValue": ""
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/networkSecurityGroups",
@@ -3326,7 +3294,7 @@
                         "batchSize": 1
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-attach-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').subnets[copyIndex()].subnetName)]",
                       "resourceGroup": "[parameters('rgVnet')]",
                       "properties": {
@@ -3366,8 +3334,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "2689004932160573512"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1493134657072870144"
                             }
                           },
                           "parameters": {
@@ -3399,7 +3367,6 @@
                               "type": "array"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/virtualNetworks/subnets",
@@ -3427,11 +3394,11 @@
                   "outputs": {
                     "vNetName": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName)), '2020-06-01').outputs.vNetName.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName))).outputs.vNetName.value]"
                     },
                     "vNetId": {
                       "type": "string",
-                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName)), '2020-06-01').outputs.vNetId.value]"
+                      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgVnet')), 'Microsoft.Resources/deployments', format('dpl-{0}-{1}', uniqueString(deployment().name, parameters('location')), parameters('vNetObject').vNetName))).outputs.vNetId.value]"
                     }
                   }
                 }
@@ -3442,7 +3409,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-peering-hub-spoke01', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgHub')]",
               "properties": {
@@ -3452,13 +3419,13 @@
                 "mode": "Incremental",
                 "parameters": {
                   "vnetSourceName": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]"
                   },
                   "peeringName": {
-                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value)]"
+                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value)]"
                   },
                   "vnetTargetId": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                   }
                 },
                 "template": {
@@ -3467,8 +3434,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "3056324480419756487"
+                      "version": "0.10.61.36676",
+                      "templateHash": "15769953375790046071"
                     }
                   },
                   "parameters": {
@@ -3482,7 +3449,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
@@ -3508,7 +3474,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-peering-spoke01-hub', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgSpoke01')]",
               "properties": {
@@ -3518,13 +3484,13 @@
                 "mode": "Incremental",
                 "parameters": {
                   "vnetSourceName": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]"
                   },
                   "peeringName": {
-                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value)]"
+                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value)]"
                   },
                   "vnetTargetId": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                   }
                 },
                 "template": {
@@ -3533,8 +3499,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "3056324480419756487"
+                      "version": "0.10.61.36676",
+                      "templateHash": "15769953375790046071"
                     }
                   },
                   "parameters": {
@@ -3548,7 +3514,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
@@ -3574,7 +3539,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-peering-hub-spoke02', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgHub')]",
               "properties": {
@@ -3584,13 +3549,13 @@
                 "mode": "Incremental",
                 "parameters": {
                   "vnetSourceName": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]"
                   },
                   "peeringName": {
-                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value)]"
+                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value)]"
                   },
                   "vnetTargetId": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                   }
                 },
                 "template": {
@@ -3599,8 +3564,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "3056324480419756487"
+                      "version": "0.10.61.36676",
+                      "templateHash": "15769953375790046071"
                     }
                   },
                   "parameters": {
@@ -3614,7 +3579,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
@@ -3640,7 +3604,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-peering-spoke02-hub', uniqueString(deployment().name, deployment().location))]",
               "resourceGroup": "[parameters('rgSpoke02')]",
               "properties": {
@@ -3650,13 +3614,13 @@
                 "mode": "Incremental",
                 "parameters": {
                   "vnetSourceName": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]"
                   },
                   "peeringName": {
-                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value)]"
+                    "value": "[format('{0}-to-{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value)]"
                   },
                   "vnetTargetId": {
-                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                    "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                   }
                 },
                 "template": {
@@ -3665,8 +3629,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "3056324480419756487"
+                      "version": "0.10.61.36676",
+                      "templateHash": "15769953375790046071"
                     }
                   },
                   "parameters": {
@@ -3680,7 +3644,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
@@ -3711,7 +3674,7 @@
                 "count": "[length(parameters('privateDnsZoneNames'))]"
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-dnsZone-{1}', uniqueString(deployment().name, deployment().location), parameters('privateDnsZoneNames')[copyIndex()])]",
               "resourceGroup": "[parameters('rgHub')]",
               "properties": {
@@ -3733,8 +3696,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "10696259716081093460"
+                      "version": "0.10.61.36676",
+                      "templateHash": "14004457062261306802"
                     }
                   },
                   "parameters": {
@@ -3747,7 +3710,6 @@
                       "defaultValue": {}
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Network/privateDnsZones",
@@ -3773,7 +3735,7 @@
                 "count": "[length(parameters('privateDnsZoneNames'))]"
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-dnsZoneNwL-{1}', uniqueString(deployment().name, deployment().location), copyIndex())]",
               "resourceGroup": "[parameters('rgHub')]",
               "properties": {
@@ -3788,16 +3750,16 @@
                   "virtualNetworkLinks": {
                     "value": [
                       {
-                        "vNetName": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]",
-                        "vNetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                        "vNetName": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]",
+                        "vNetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                       },
                       {
-                        "vNetName": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]",
-                        "vNetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                        "vNetName": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]",
+                        "vNetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke01')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-1', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                       },
                       {
-                        "vNetName": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetName.value]",
-                        "vNetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.vNetId.value]"
+                        "vNetName": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location)))).outputs.vNetName.value]",
+                        "vNetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke02')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-spoke-2', uniqueString(deployment().name, deployment().location)))).outputs.vNetId.value]"
                       }
                     ]
                   },
@@ -3811,8 +3773,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "15336601153246890894"
+                      "version": "0.10.61.36676",
+                      "templateHash": "9491151423323881380"
                     }
                   },
                   "parameters": {
@@ -3827,7 +3789,6 @@
                       "defaultValue": {}
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "copy": {
@@ -3860,11 +3821,11 @@
           "outputs": {
             "fwPrivateIpAddress": {
               "type": "string",
-              "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.fwPrivateIpAddress.value]"
+              "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.fwPrivateIpAddress.value]"
             },
             "fwPublicIpAddress": {
               "type": "string",
-              "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location))), '2020-06-01').outputs.fwPublicIpAddress.value]"
+              "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgHub')), 'Microsoft.Resources/deployments', format('dpl-{0}-vnet-hub', uniqueString(deployment().name, deployment().location)))).outputs.fwPublicIpAddress.value]"
             }
           }
         }
@@ -3877,7 +3838,7 @@
     {
       "condition": "[parameters('deployVPNGw')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-vpnGw', uniqueString(deployment().name, deployment().location))]",
       "resourceGroup": "[variables('rgHub')]",
       "properties": {
@@ -3917,8 +3878,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "2167722575179615897"
+              "version": "0.10.61.36676",
+              "templateHash": "9523962942625287225"
             }
           },
           "parameters": {
@@ -4172,7 +4133,6 @@
               }
             }
           },
-          "functions": [],
           "variables": {
             "copy": [
               {
@@ -4438,7 +4398,7 @@
             {
               "condition": "[not(empty(parameters('cuaId')))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('pid-{0}', parameters('cuaId'))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -4452,11 +4412,10 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "14669053462841078328"
+                      "version": "0.10.61.36676",
+                      "templateHash": "4193470495622901480"
                     }
                   },
-                  "functions": [],
                   "resources": []
                 }
               }
@@ -4467,7 +4426,7 @@
                 "count": "[length(parameters('roleAssignments'))]"
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('{0}-VNetGateway-Rbac-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -4491,8 +4450,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "1972163673266158848"
+                      "version": "0.10.61.36676",
+                      "templateHash": "11370741699744880084"
                     }
                   },
                   "parameters": {
@@ -4506,7 +4465,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "builtInRoleNames": {
                       "Owner": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
@@ -4588,7 +4546,7 @@
     {
       "condition": "[parameters('deploySecureBatch')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-azBatchSecured', uniqueString(deployment().name, deployment().location))]",
       "resourceGroup": "[variables('rgAzureBatch')]",
       "properties": {
@@ -4648,9 +4606,6 @@
           "batchServiceObjectId": {
             "value": "[parameters('batchServiceObjectId')]"
           },
-          "assignBatchServiceRoles": {
-            "value": "[parameters('assignBatchServiceRoles')]"
-          },
           "batchNodeSku": {
             "value": "[parameters('batchNodeSku')]"
           },
@@ -4670,8 +4625,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "15113933110027626258"
+              "version": "0.10.61.36676",
+              "templateHash": "13425650057520166164"
             }
           },
           "parameters": {
@@ -4734,9 +4689,6 @@
             "batchServiceObjectId": {
               "type": "string"
             },
-            "assignBatchServiceRoles": {
-              "type": "bool"
-            },
             "batchAccountName": {
               "type": "string"
             },
@@ -4751,7 +4703,6 @@
               "type": "string"
             }
           },
-          "functions": [],
           "variables": {
             "kvName": "[format('kv-{0}-{1}-ba', parameters('environment'), parameters('prefix'))]",
             "privateEndpointSubnetId": "[format('{0}/subnets/{1}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgSpoke')), 'Microsoft.Network/virtualNetworks', parameters('vNetObject').vNetName), parameters('vNetObject').subnets[parameters('vNetObject').positionEndpointSubnet].subnetName)]",
@@ -4782,9 +4733,196 @@
               "tags": "[parameters('tags')]"
             },
             {
-              "condition": "[parameters('assignBatchServiceRoles')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
+              "name": "[format('dpl-{0}-testBatchRoleAssignment', uniqueString(deployment().name, parameters('location')))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "principalId": {
+                    "value": "[parameters('batchServiceObjectId')]"
+                  },
+                  "roleDefinitionName": {
+                    "value": "Contributor"
+                  },
+                  "location": {
+                    "value": "[parameters('location')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.10.61.36676",
+                      "templateHash": "18119728556663911977"
+                    }
+                  },
+                  "parameters": {
+                    "principalId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "the principal id to check for the role assignment"
+                      }
+                    },
+                    "roleDefinitionName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "built-in role definition id"
+                      }
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "location where the deployment script will be executed"
+                      }
+                    },
+                    "currentTime": {
+                      "type": "string",
+                      "defaultValue": "[utcNow()]"
+                    }
+                  },
+                  "variables": {
+                    "query": "[format('[?principalId==''{0}'' && roleDefinitionName==''{1}''].{{name:name}}', parameters('principalId'), parameters('roleDefinitionName'))]",
+                    "scriptContent": "[format('az login -i > /dev/null 2>&1 && az role assignment list --scope {0} -o json --query \"{1}\"', subscription().id, variables('query'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+                      "apiVersion": "2022-01-31-preview",
+                      "name": "[uniqueString(parameters('principalId'), subscription().id, parameters('roleDefinitionName'))]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "type": "Microsoft.Resources/deploymentScripts",
+                      "apiVersion": "2020-10-01",
+                      "name": "testRoleAssignment",
+                      "location": "[parameters('location')]",
+                      "kind": "AzureCLI",
+                      "identity": {
+                        "type": "UserAssigned",
+                        "userAssignedIdentities": {
+                          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', uniqueString(parameters('principalId'), subscription().id, parameters('roleDefinitionName'))))]": {}
+                        }
+                      },
+                      "properties": {
+                        "azCliVersion": "2.39.0",
+                        "retentionInterval": "P1D",
+                        "scriptContent": "[format('{0} 2>&1 | jq -c ''{{\"count\": . | length }}'' | tee $AZ_SCRIPTS_OUTPUT_PATH', variables('scriptContent'))]",
+                        "cleanupPreference": "OnSuccess",
+                        "forceUpdateTag": "[parameters('currentTime')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', uniqueString(parameters('principalId'), subscription().id, parameters('roleDefinitionName')))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2020-10-01",
+                      "name": "[format('dpl-{0}-miRoleAssignment', uniqueString(deployment().name, parameters('location')))]",
+                      "subscriptionId": "[subscription().subscriptionId]",
+                      "location": "[resourceGroup().location]",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "builtInRoleType": {
+                            "value": "Reader"
+                          },
+                          "principalId": {
+                            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', uniqueString(parameters('principalId'), subscription().id, parameters('roleDefinitionName')))).principalId]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.10.61.36676",
+                              "templateHash": "13153533945357071102"
+                            }
+                          },
+                          "parameters": {
+                            "principalId": {
+                              "type": "string"
+                            },
+                            "principalType": {
+                              "type": "string",
+                              "defaultValue": "ServicePrincipal"
+                            },
+                            "builtInRoleType": {
+                              "type": "string",
+                              "metadata": {
+                                "description": "Built-in role to assign"
+                              },
+                              "allowedValues": [
+                                "Owner",
+                                "Contributor",
+                                "Reader"
+                              ]
+                            },
+                            "roleNameGuid": {
+                              "type": "string",
+                              "defaultValue": "[guid(parameters('principalId'), parameters('builtInRoleType'), subscription().displayName)]",
+                              "metadata": {
+                                "description": "A new GUID used to identify the role assignment"
+                              }
+                            },
+                            "roleAssignmentExists": {
+                              "type": "bool",
+                              "defaultValue": false,
+                              "metadata": {
+                                "description": "when set to true, role assigment will be ignored"
+                              }
+                            }
+                          },
+                          "variables": {
+                            "role": {
+                              "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
+                              "Contributor": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c', subscription().subscriptionId)]",
+                              "Reader": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7', subscription().subscriptionId)]"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "condition": "[not(parameters('roleAssignmentExists'))]",
+                              "type": "Microsoft.Authorization/roleAssignments",
+                              "apiVersion": "2020-04-01-preview",
+                              "name": "[parameters('roleNameGuid')]",
+                              "properties": {
+                                "roleDefinitionId": "[variables('role')[parameters('builtInRoleType')]]",
+                                "principalId": "[parameters('principalId')]",
+                                "principalType": "[parameters('principalType')]"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', uniqueString(parameters('principalId'), subscription().id, parameters('roleDefinitionName')))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "result": {
+                      "type": "bool",
+                      "value": "[if(greater(reference(resourceId('Microsoft.Resources/deploymentScripts', 'testRoleAssignment')).outputs.count, 0), true(), false())]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchRoleAssignment', uniqueString(deployment().name, parameters('location')))]",
               "subscriptionId": "[subscription().subscriptionId]",
               "location": "[resourceGroup().location]",
@@ -4799,6 +4937,9 @@
                   },
                   "principalId": {
                     "value": "[parameters('batchServiceObjectId')]"
+                  },
+                  "roleAssignmentExists": {
+                    "value": "[reference(resourceId('Microsoft.Resources/deployments', format('dpl-{0}-testBatchRoleAssignment', uniqueString(deployment().name, parameters('location'))))).outputs.result.value]"
                   }
                 },
                 "template": {
@@ -4807,13 +4948,17 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "1549758155020858638"
+                      "version": "0.10.61.36676",
+                      "templateHash": "13153533945357071102"
                     }
                   },
                   "parameters": {
                     "principalId": {
                       "type": "string"
+                    },
+                    "principalType": {
+                      "type": "string",
+                      "defaultValue": "ServicePrincipal"
                     },
                     "builtInRoleType": {
                       "type": "string",
@@ -4832,9 +4977,15 @@
                       "metadata": {
                         "description": "A new GUID used to identify the role assignment"
                       }
+                    },
+                    "roleAssignmentExists": {
+                      "type": "bool",
+                      "defaultValue": false,
+                      "metadata": {
+                        "description": "when set to true, role assigment will be ignored"
+                      }
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "role": {
                       "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
@@ -4844,21 +4995,26 @@
                   },
                   "resources": [
                     {
+                      "condition": "[not(parameters('roleAssignmentExists'))]",
                       "type": "Microsoft.Authorization/roleAssignments",
                       "apiVersion": "2020-04-01-preview",
                       "name": "[parameters('roleNameGuid')]",
                       "properties": {
                         "roleDefinitionId": "[variables('role')[parameters('builtInRoleType')]]",
-                        "principalId": "[parameters('principalId')]"
+                        "principalId": "[parameters('principalId')]",
+                        "principalType": "[parameters('principalType')]"
                       }
                     }
                   ]
                 }
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', format('dpl-{0}-testBatchRoleAssignment', uniqueString(deployment().name, parameters('location'))))]"
+              ]
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchKeyVault', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -4894,8 +5050,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "14045650462174255906"
+                      "version": "0.10.61.36676",
+                      "templateHash": "16302241451410019109"
                     }
                   },
                   "parameters": {
@@ -4965,7 +5121,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "kvPrivateDnsZoneName": "privatelink.vaultcore.azure.net"
                   },
@@ -5025,7 +5180,7 @@
                     {
                       "condition": "[parameters('deployPrivateKeyVault')]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('deployEndpointAEntry-{0}', parameters('keyVaultName'))]",
                       "resourceGroup": "[parameters('rgDNSZone')]",
                       "properties": {
@@ -5035,7 +5190,7 @@
                         "mode": "Incremental",
                         "parameters": {
                           "ipAddress": {
-                            "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('keyVaultName')))).customDnsConfigs[0].ipAddresses[0]]"
+                            "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('keyVaultName'))), '2021-03-01').customDnsConfigs[0].ipAddresses[0]]"
                           },
                           "privateDnsZoneName": {
                             "value": "[variables('kvPrivateDnsZoneName')]"
@@ -5050,8 +5205,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "3127047531689483546"
+                              "version": "0.10.61.36676",
+                              "templateHash": "13254199335564405154"
                             }
                           },
                           "parameters": {
@@ -5065,7 +5220,6 @@
                               "type": "string"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/privateDnsZones/A",
@@ -5092,11 +5246,11 @@
                   "outputs": {
                     "privateEndpointIp": {
                       "type": "string",
-                      "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('keyVaultName')))).customDnsConfigs[0].ipAddresses[0]]"
+                      "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('keyVaultName'))), '2021-03-01').customDnsConfigs[0].ipAddresses[0]]"
                     },
                     "privateEndpointFqdn": {
                       "type": "string",
-                      "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('keyVaultName')))).customDnsConfigs[0].fqdn]"
+                      "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('keyVaultName'))), '2021-03-01').customDnsConfigs[0].fqdn]"
                     }
                   }
                 }
@@ -5107,7 +5261,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchKV-Policy-MI-add', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5131,8 +5285,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "2411204556421892906"
+                      "version": "0.10.61.36676",
+                      "templateHash": "1205673801172475927"
                     }
                   },
                   "parameters": {
@@ -5151,7 +5305,6 @@
                       "type": "array"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.KeyVault/vaults/accessPolicies",
@@ -5171,7 +5324,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchStorageAccounts', uniqueString(deployment().name, parameters('location')))]",
               "resourceGroup": "[parameters('rgAzureBatch')]",
               "properties": {
@@ -5202,8 +5355,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "8288287084665699031"
+                      "version": "0.10.61.36676",
+                      "templateHash": "2598620890102801486"
                     }
                   },
                   "parameters": {
@@ -5233,7 +5386,6 @@
                       "defaultValue": "[resourceGroup().location]"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "copy": {
@@ -5241,7 +5393,7 @@
                         "count": "[length(parameters('saDefinitions'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-StorageAccount{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -5303,8 +5455,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "10243001512272751996"
+                              "version": "0.10.61.36676",
+                              "templateHash": "734919773903124754"
                             }
                           },
                           "parameters": {
@@ -5395,7 +5547,6 @@
                               "defaultValue": false
                             }
                           },
-                          "functions": [],
                           "variables": {
                             "secretName": "[format('sa-connection-{0}', parameters('storageAccountName'))]",
                             "filePrivateDnsZoneName": "[format('privatelink.file.{0}', environment().suffixes.storage)]",
@@ -5470,7 +5621,7 @@
                             {
                               "condition": "[not(equals(parameters('privateEndpointSubnetId'), ''))]",
                               "type": "Microsoft.Resources/deployments",
-                              "apiVersion": "2020-06-01",
+                              "apiVersion": "2020-10-01",
                               "name": "[format('deployEndpointAEntry-{0}', parameters('storageAccountName'))]",
                               "resourceGroup": "[parameters('rgHub')]",
                               "properties": {
@@ -5480,7 +5631,7 @@
                                 "mode": "Incremental",
                                 "parameters": {
                                   "ipAddress": {
-                                    "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('storageAccountName')))).customDnsConfigs[0].ipAddresses[0]]"
+                                    "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('storageAccountName'))), '2021-03-01').customDnsConfigs[0].ipAddresses[0]]"
                                   },
                                   "privateDnsZoneName": {
                                     "value": "[variables('privateDnsZoneName')]"
@@ -5495,8 +5646,8 @@
                                   "metadata": {
                                     "_generator": {
                                       "name": "bicep",
-                                      "version": "0.4.1008.15138",
-                                      "templateHash": "3127047531689483546"
+                                      "version": "0.10.61.36676",
+                                      "templateHash": "13254199335564405154"
                                     }
                                   },
                                   "parameters": {
@@ -5510,7 +5661,6 @@
                                       "type": "string"
                                     }
                                   },
-                                  "functions": [],
                                   "resources": [
                                     {
                                       "type": "Microsoft.Network/privateDnsZones/A",
@@ -5545,11 +5695,11 @@
                             },
                             "privateEndpointIp": {
                               "type": "string",
-                              "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('storageAccountName')))).customDnsConfigs[0].ipAddresses[0]]"
+                              "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('storageAccountName'))), '2021-03-01').customDnsConfigs[0].ipAddresses[0]]"
                             },
                             "privateEndpointFqdn": {
                               "type": "string",
-                              "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('storageAccountName')))).customDnsConfigs[0].fqdn]"
+                              "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-pl', parameters('storageAccountName'))), '2021-03-01').customDnsConfigs[0].fqdn]"
                             }
                           }
                         }
@@ -5562,7 +5712,7 @@
                         "count": "[length(parameters('saDefinitions'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-add-saContainer-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -5585,8 +5735,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "5963925546103719264"
+                              "version": "0.10.61.36676",
+                              "templateHash": "18060348861853330747"
                             }
                           },
                           "parameters": {
@@ -5602,7 +5752,6 @@
                               "defaultValue": []
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "copy": {
@@ -5630,7 +5779,7 @@
                         "count": "[length(parameters('saDefinitions'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-add-FileShare-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -5662,8 +5811,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "1469612782383947570"
+                              "version": "0.10.61.36676",
+                              "templateHash": "1619228392820487408"
                             }
                           },
                           "parameters": {
@@ -5701,7 +5850,6 @@
                               "defaultValue": []
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "copy": {
@@ -5737,7 +5885,7 @@
                 "count": "[length(parameters('saDefinitions'))]"
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchStorageRoleAssignment-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5761,8 +5909,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "3363589026672239754"
+                      "version": "0.10.61.36676",
+                      "templateHash": "10267862899354920050"
                     }
                   },
                   "parameters": {
@@ -5794,7 +5942,6 @@
                       }
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "role": {
                       "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
@@ -5828,7 +5975,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchBuildAcr', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5846,8 +5993,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "14766751037052341594"
+                      "version": "0.10.61.36676",
+                      "templateHash": "16993227065818767680"
                     }
                   },
                   "parameters": {
@@ -6052,7 +6199,6 @@
                       }
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "copy": [
                       {
@@ -6150,7 +6296,7 @@
                     {
                       "condition": "[not(empty(parameters('cuaId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('pid-{0}', parameters('cuaId'))]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -6164,11 +6310,10 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "14669053462841078328"
+                              "version": "0.10.61.36676",
+                              "templateHash": "4193470495622901480"
                             }
                           },
-                          "functions": [],
                           "resources": []
                         }
                       }
@@ -6179,7 +6324,7 @@
                         "count": "[length(parameters('roleAssignments'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('{0}-ContainerRegistry-Rbac-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -6206,8 +6351,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "10714723694989660590"
+                              "version": "0.10.61.36676",
+                              "templateHash": "362362226205302491"
                             }
                           },
                           "parameters": {
@@ -6230,7 +6375,6 @@
                               ]
                             }
                           },
-                          "functions": [],
                           "variables": {
                             "builtInRoleNames": {
                               "Owner": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
@@ -6286,7 +6430,7 @@
                         "count": "[length(parameters('privateEndpoints'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('{0}-ContainerRegistry-PrivateEndpoint-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -6313,8 +6457,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "5132162992412020970"
+                              "version": "0.10.61.36676",
+                              "templateHash": "5781139449987624144"
                             }
                           },
                           "parameters": {
@@ -6331,7 +6475,6 @@
                               "type": "object"
                             }
                           },
-                          "functions": [],
                           "variables": {
                             "privateEndpointResourceName": "[last(split(parameters('privateEndpointResourceId'), '/'))]",
                             "privateEndpoint_var": {
@@ -6441,7 +6584,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchAcr', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -6485,8 +6628,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "14766751037052341594"
+                      "version": "0.10.61.36676",
+                      "templateHash": "16993227065818767680"
                     }
                   },
                   "parameters": {
@@ -6691,7 +6834,6 @@
                       }
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "copy": [
                       {
@@ -6789,7 +6931,7 @@
                     {
                       "condition": "[not(empty(parameters('cuaId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('pid-{0}', parameters('cuaId'))]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -6803,11 +6945,10 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "14669053462841078328"
+                              "version": "0.10.61.36676",
+                              "templateHash": "4193470495622901480"
                             }
                           },
-                          "functions": [],
                           "resources": []
                         }
                       }
@@ -6818,7 +6959,7 @@
                         "count": "[length(parameters('roleAssignments'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('{0}-ContainerRegistry-Rbac-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -6845,8 +6986,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "10714723694989660590"
+                              "version": "0.10.61.36676",
+                              "templateHash": "362362226205302491"
                             }
                           },
                           "parameters": {
@@ -6869,7 +7010,6 @@
                               ]
                             }
                           },
-                          "functions": [],
                           "variables": {
                             "builtInRoleNames": {
                               "Owner": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
@@ -6925,7 +7065,7 @@
                         "count": "[length(parameters('privateEndpoints'))]"
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('{0}-ContainerRegistry-PrivateEndpoint-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -6952,8 +7092,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "5132162992412020970"
+                              "version": "0.10.61.36676",
+                              "templateHash": "5781139449987624144"
                             }
                           },
                           "parameters": {
@@ -6970,7 +7110,6 @@
                               "type": "object"
                             }
                           },
-                          "functions": [],
                           "variables": {
                             "privateEndpointResourceName": "[last(split(parameters('privateEndpointResourceId'), '/'))]",
                             "privateEndpoint_var": {
@@ -7084,7 +7223,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-RG-Contrib-MI', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7108,8 +7247,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "8862660433565026859"
+                      "version": "0.10.61.36676",
+                      "templateHash": "10779920647375836820"
                     }
                   },
                   "parameters": {
@@ -7150,7 +7289,6 @@
                       ]
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "role": {
                       "Owner": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', subscription().subscriptionId)]",
@@ -7179,7 +7317,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-Check-KV-Image', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7212,8 +7350,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "15272037237400305594"
+                      "version": "0.10.61.36676",
+                      "templateHash": "5846562035348909417"
                     }
                   },
                   "parameters": {
@@ -7249,7 +7387,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "type": "Microsoft.Resources/deploymentScripts",
@@ -7289,7 +7426,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchAccount', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7325,8 +7462,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "17138416306417792838"
+                      "version": "0.10.61.36676",
+                      "templateHash": "3112664960187566373"
                     }
                   },
                   "parameters": {
@@ -7357,7 +7494,6 @@
                       "type": "string"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "batchPrivateDnsZoneName": "[format('privatelink.{0}.batch.azure.com', parameters('location'))]"
                   },
@@ -7422,7 +7558,7 @@
                     },
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('deployEndpointAEntry-{0}', parameters('batchAccountName'))]",
                       "resourceGroup": "[parameters('rgDNSZone')]",
                       "properties": {
@@ -7447,8 +7583,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "3127047531689483546"
+                              "version": "0.10.61.36676",
+                              "templateHash": "13254199335564405154"
                             }
                           },
                           "parameters": {
@@ -7462,7 +7598,6 @@
                               "type": "string"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "type": "Microsoft.Network/privateDnsZones/A",
@@ -7509,7 +7644,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "[format('dpl-{0}-batchPool-main', uniqueString(deployment().name, parameters('location')))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7560,8 +7695,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "1802906545104741774"
+                      "version": "0.10.61.36676",
+                      "templateHash": "14942515476714450636"
                     }
                   },
                   "parameters": {
@@ -7606,7 +7741,6 @@
                       "defaultValue": "[resourceGroup().location]"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "preloadContainerImage": "[format('{0}.azurecr.io/{1}:latest', parameters('acrName'), parameters('acrImageName'))]",
                     "containerRegistryServer": "[format('{0}.azurecr.io', parameters('acrName'))]",
@@ -7619,7 +7753,7 @@
                   "resources": [
                     {
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2020-06-01",
+                      "apiVersion": "2020-10-01",
                       "name": "[format('dpl-{0}-batchPoolCollection', uniqueString(deployment().name, parameters('location')))]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -7882,8 +8016,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.4.1008.15138",
-                              "templateHash": "16779059004869730197"
+                              "version": "0.10.61.36676",
+                              "templateHash": "13239025263675305167"
                             }
                           },
                           "parameters": {
@@ -7897,7 +8031,6 @@
                               "type": "array"
                             }
                           },
-                          "functions": [],
                           "resources": [
                             {
                               "copy": {
@@ -7950,7 +8083,7 @@
     {
       "condition": "[parameters('deployJumpBoxVMs')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[format('dpl-{0}-jumpbox', uniqueString(deployment().name, deployment().location))]",
       "resourceGroup": "[variables('rgJumpbox')]",
       "properties": {
@@ -7987,8 +8120,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "12995020243981865568"
+              "version": "0.10.61.36676",
+              "templateHash": "13285058694094005314"
             }
           },
           "parameters": {
@@ -8015,11 +8148,10 @@
               "defaultValue": {}
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "deployJumpBoxVM",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -8043,8 +8175,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "1080711766590143088"
+                      "version": "0.10.61.36676",
+                      "templateHash": "13643951747345780148"
                     }
                   },
                   "parameters": {
@@ -8063,7 +8195,6 @@
                       "defaultValue": {}
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "copy": {
@@ -8140,7 +8271,7 @@
             },
             {
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "deployJumpBoxWindowsVM",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -8167,8 +8298,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "1080711766590143088"
+                      "version": "0.10.61.36676",
+                      "templateHash": "13643951747345780148"
                     }
                   },
                   "parameters": {
@@ -8187,7 +8318,6 @@
                       "defaultValue": {}
                     }
                   },
-                  "functions": [],
                   "resources": [
                     {
                       "copy": {
@@ -8265,7 +8395,7 @@
             {
               "condition": "[parameters('deployJumpboxWindowsAddOns')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2020-06-01",
+              "apiVersion": "2020-10-01",
               "name": "depoyWindowsJumpboxVMExtension",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -8292,8 +8422,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.4.1008.15138",
-                      "templateHash": "9986773824395740186"
+                      "version": "0.10.61.36676",
+                      "templateHash": "14743820000849094944"
                     }
                   },
                   "parameters": {
@@ -8319,7 +8449,6 @@
                       "defaultValue": "[utcNow()]"
                     }
                   },
-                  "functions": [],
                   "variables": {
                     "virtualMachineExtensionCustomScript": {
                       "name": "[format('{0}/{1}', parameters('vmName'), parameters('vmExtensionName'))]",
