@@ -154,7 +154,7 @@ module peerSpoke02ToHub '../../modules/networking/vNet/vNetPeering.bicep' = {
 
 module privateDnsZones '../../modules/networking/dnsZones/privateDnsZone.bicep' = [for dnsZoneName in privateDnsZoneNames: if (!ignoreDnsZoneNwLinks) {
   scope: resourceGroup(rgHub)
-  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-dnsZone-${dnsZoneName}'
+  name: 'dpl-${uniqueString(deployment().name,deployment().location)}-dnsZone-${uniqueString(dnsZoneName)}'
   params: {
     privateDnsZoneName: dnsZoneName
     tags: tags
